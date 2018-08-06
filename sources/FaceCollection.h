@@ -19,7 +19,9 @@ namespace Scriber
 
 		FaceID GetFaceIDFromCode(uint32_t code, TypefaceID prefferedTypeface, FontStyle::Enum prefferedStyle) const;
 
-		FT_Face GetFace(FaceID id);
+		bool HasFaceIDCode(uint32_t code, FaceID faceID) const;
+
+		FT_Face GetFace(FaceID id) const;
 
 		hb_font_t* GetHBFontByFaceId(FaceID id);
 	private:

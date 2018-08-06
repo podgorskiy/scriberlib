@@ -12,9 +12,26 @@ namespace Scriber
 		uint32_t  code;
 		uint16_t  glyph;
 		uint16_t  group;
-		float     advance;
-		vec2      offset;
+		F26p6     advance;
+		i16vec2   offset;
 		FaceID    id;
+	};
+
+
+	struct LayoutMode
+	{
+		enum Enum
+		{
+			None                  = 0,
+			MinibidiReordering    = 1 << 0,
+			MinibidiShaping       = 1 << 1,
+			HarfbuzzShaping       = 1 << 2,
+
+			Basic = None,
+			SimpleShaping_RTL = MinibidiReordering | MinibidiShaping,
+			ComplexShaping_noRTL = HarfbuzzShaping,
+			ComplexShaping_RTL = MinibidiReordering | HarfbuzzShaping
+		};
 	};
 
 	typedef std::vector<LayoutData> LayoutDataString;
@@ -26,6 +43,7 @@ namespace Scriber
 
 		const LayoutDataString& Process(utf32string& text, int start, int end, u16vec2 dpi, const Font& font);
 
+		void SetMode(LayoutMode::Enum mode);
 	private:
 		void ShapeFragment(utf32string& text, FaceID faceId, u16vec2 dpi, const Font& font);
 		void FlushShapedData(const std::vector<LayoutData>& data);
@@ -36,5 +54,7 @@ namespace Scriber
 		utf32string             m_fragment;
 
 		hb_buffer_t*			m_HBbuf;
+
+		LayoutMode::Enum        m_mode;
 	};
 }

@@ -68,7 +68,6 @@ void FaceCollection::AndFontToTypeface(TypefaceID tf, const char* filename, Font
 	FT_Face face = nullptr;
 	FT_Error result = FT_New_Face(m_lib, filename, faceIndexInFile, &face);
 	ForceUCS2(face);
-	FT_Set_Pixel_Sizes(face, 0, 16);
 	if (face != nullptr && result == FT_Err_Ok)
 	{
 		printf("\n\nCharmap family: %s\n", face->family_name);
@@ -88,6 +87,12 @@ void FaceCollection::AndFontToTypeface(TypefaceID tf, const char* filename, Font
 FaceCollection::Typeface::Typeface()
 {
 	InitArray(m_faces, FT_Face(nullptr));
+}
+
+bool FaceCollection::HasFaceIDCode(uint32_t code, FaceID faceID) const
+{
+	FT_UInt glyphIndex = FT_Get_Char_Index(GetFace(faceID), code);
+	return glyphIndex != 0;
 }
 
 FaceID FaceCollection::GetFaceIDFromCode(uint32_t code, TypefaceID prefferedTypeface, FontStyle::Enum prefferedStyle) const
@@ -178,7 +183,7 @@ FaceID FaceCollection::GetFaceIDFromCode(uint32_t code, TypefaceID prefferedType
 	return InvalidFaceID;
 }
 
-FT_Face FaceCollection::GetFace(FaceID id)
+FT_Face FaceCollection::GetFace(FaceID id) const
 {
 	if (id == InvalidFaceID)
 	{

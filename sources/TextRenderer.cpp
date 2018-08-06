@@ -85,7 +85,7 @@ void TextRenderer::SumbitGlyphString(const GlyphString& glyphString, const ivec2
 		ivec2 bitmapPos = glyphPosition + ivec2(glyph.m_metrics.horizontalBearing.x, -glyph.m_metrics.horizontalBearing.y);
 
 		SubmitGlyph(bitmapPos, glyph);
-		glyphPosition.x += int(glyph.m_metrics.horiAdvance);
+		glyphPosition.x += round(float(glyph.m_metrics.horiAdvance));
 		textMaxWidth = std::max(glyphPosition.x, textMaxWidth);
 	}
 

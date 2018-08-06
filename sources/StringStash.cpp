@@ -23,7 +23,6 @@ const GlyphString& StringStash::GetGlyphString(const char* text, u16vec2 dpi, co
 		m_glyphs.clear();
 		m_text_utf32.clear();
 		utf8::utf8to32(text, text + length, std::back_inserter(m_text_utf32));
-		m_text_utf32.push_back(0);
 
 		typedef std::back_insert_iterator<GlyphString> GlyphStringInsert;
 

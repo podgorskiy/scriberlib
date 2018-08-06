@@ -26,7 +26,7 @@ namespace Scriber
 
 			/// The horizontal/vertical distance from the current pen position to the glyph's left/top
 			/// bbox edge. It is positive for horizontal layouts, and in most cases negative for vertical ones.
-			u16vec2     horizontalBearing;
+			i16vec2     horizontalBearing;
 			//F26p6vec2   verticalBearing;
 
 			/// Glyph bitmap's bounding box. It is independent of the layout direction.

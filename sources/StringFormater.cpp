@@ -16,10 +16,13 @@ void StringFormater::Format(utf32string& string, const Font& font, u16vec2 dpi, 
 
 	for (auto it = layout.begin(); it != layout.end(); ++it)
 	{
-		Glyph& glyph = m_glyphStash->RetrieveGlyph(it->glyph, lastGlyph, it->id, font, dpi);
+		Glyph glyph = m_glyphStash->RetrieveGlyph(it->glyph, lastGlyph, it->id, font, dpi);
 		
 		glyph.m_code = it->code;
 		glyph.m_color = font.color;
+		glyph.m_metrics.horizontalBearing.x += it->offset.x;
+		glyph.m_metrics.horizontalBearing.y += it->offset.y;
+		glyph.m_metrics.horiAdvance.v = it->advance.v;
 
 		inserter = glyph;
 
