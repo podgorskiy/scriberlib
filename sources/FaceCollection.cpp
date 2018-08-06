@@ -50,13 +50,13 @@ TypefaceID FaceCollection::GetTypefaceByName(const char* name)
 	return InvalidTypefaceID;
 }
 
-
 static int ForceUCS2(FT_Face ftf)
 {
 	for (int i = 0; i < ftf->num_charmaps; i++)
 	{
 		if (((ftf->charmaps[i]->platform_id == 0) && (ftf->charmaps[i]->encoding_id == 3)) || ((ftf->charmaps[i]->platform_id == 3) && (ftf->charmaps[i]->encoding_id == 1)))
 		{
+			printf("CMap_Language_ID: %d\n", FT_Get_CMap_Language_ID(ftf->charmaps[i]));
 			return FT_Set_Charmap(ftf, ftf->charmaps[i]);
 		}
 	}
@@ -71,6 +71,7 @@ void FaceCollection::AndFontToTypeface(TypefaceID tf, const char* filename, Font
 	if (face != nullptr && result == FT_Err_Ok)
 	{
 		printf("\n\nCharmap family: %s\n", face->family_name);
+		printf("Style name: %s\n", face->style_name);
 		printf("Charmap num: %d\n", face->num_charmaps);
 		for (int i = 0; i < face->num_charmaps; ++i)
 		{
@@ -79,6 +80,28 @@ void FaceCollection::AndFontToTypeface(TypefaceID tf, const char* filename, Font
 			printf("%s\n", name.c_str());
 		}
 
+		/*
+
+		FT_SfntName name;
+		for (int i = 0, l = FT_Get_Sfnt_Name_Count(face); i < l; ++i)
+		{
+			FT_Get_Sfnt_Name(face, i, &name);
+			printf("%.*s\n", name.string_len, name.string);
+		}
+
+		PS_FontInfoRec info;
+		FT_Error er = FT_Get_PS_Font_Info(face, &info);
+		if (er == 0)
+		{
+			printf("%s\n", info.version);
+			printf("%s\n", info.notice);
+			printf("%s\n", info.full_name);
+			printf("%s\n", info.family_name);
+			printf("%s\n", info.weight);
+			printf("italic_angle: %d\n", info.italic_angle);
+		}
+		*/
+		
 		m_typefaces[tf].m_faces[style] = face;
 		m_typefaces[tf].m_HBfonts[style] = hb_ft_font_create(face, NULL);
 	}

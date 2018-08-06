@@ -63,7 +63,7 @@ void LayoutEngine::ShapeFragment(utf32string& text, FaceID faceId, u16vec2 dpi, 
 	}
 	else
 	{
-		for (int i = 0; i < glyph_count; ++i)
+		for (int i = 0; i < (int)glyph_count; ++i)
 		{
 			LayoutData layout;
 			layout.advance.v = glyph_pos[i].x_advance;
