@@ -111,11 +111,53 @@ bool AcceptChar(char c, const char*& it)
 	return 0;
 }
 
+char ToLowerCase(char x)
+{
+	if (x >= 'A' && x <= 'Z')
+	{
+		return x + ('a' - 'A');
+	}
+	return x;
+}
+
 bool AcceptString(const char* str, const char*& it)
 {
 	while (*str)
 	{
+		if (*it == 0)
+			break;
 		if (*str++ != *it++)
+		{
+			return false;
+		}
+	}
+
+	return !*str;
+}
+
+bool AcceptStringCaseInsensitive(const char* str, const char*& it)
+{
+	while (*str)
+	{
+		if (*it == 0)
+			break;
+		if (ToLowerCase(*str++) != ToLowerCase(*it++))
+		{
+			return false;
+		}
+	}
+
+	return !*str;
+}
+
+bool AcceptStringCaseInsensitiveSkipDash(const char* str, const char*& it)
+{
+	while (*str)
+	{
+		while (AcceptChar('-', it));
+		if (*it == 0)
+			break;
+		if (ToLowerCase(*str++) != ToLowerCase(*it++))
 		{
 			return false;
 		}
@@ -129,28 +171,59 @@ bool AcceptSpace(const char*& it)
 	return AcceptChar(' ', it) || AcceptChar('\t', it);
 }
 
-Weight::Enum AcceptWeight(const char*& it)
+template<typename T>
+T::Enum AcceptProperty(const char*& it, const char*** prop)
 {
 	while (AcceptSpace(it));
 	const char* it_backup = it;
 
-	for (int i = 1; i < Weight::Count; ++i)
+	for (int i = 1; i < T::Count; ++i)
 	{
-		const char** weightName = Weight::WeightStrings[i];
-		while (*weightName != 0)
+		const char** name = prop[i];
+		while (*name != 0)
 		{
-			bool accepted = AcceptString(*weightName, it);
+			bool accepted = AcceptStringCaseInsensitiveSkipDash(*name, it);
 			if (accepted && (*it == 0 || AcceptSpace(it)))
 			{
-				return Weight::Enum(i);
+				return T::Enum(i);
+			}
+			it = it_backup;
+			++name;
+		}
+	}
+
+	return T::None;
+}
+
+Weight::Enum AcceptWeight(const char*& it)
+{
+	return AcceptProperty<Weight>();
+}
+
+Width::Enum AcceptWidth(const char*& it)
+{
+	while (AcceptSpace(it));
+	const char* it_backup = it;
+
+	for (int i = 1; i < Width::Count; ++i)
+	{
+		const char** weightName = Width::WidthStrings[i];
+		while (*weightName != 0)
+		{
+			bool accepted = AcceptStringCaseInsensitiveSkipDash(*weightName, it);
+			if (accepted && (*it == 0 || AcceptSpace(it)))
+			{
+				return Width::Enum(i);
 			}
 			it = it_backup;
 			++weightName;
 		}
 	}
 
-	return Weight::None;
+	return Width::None;
 }
+
+std::pair<Weight::Enum, Width::Enum>
 
 int main()
 {
