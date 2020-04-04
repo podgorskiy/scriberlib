@@ -225,9 +225,9 @@ void Image::SaveToTGA(const char * filename)
 				rgb[k] = *(p + j * channelCount + k);
 			}
 
-			row[j * 3 + 0] = rgb[0];
+			row[j * 3 + 0] = rgb[2];
 			row[j * 3 + 1] = rgb[1];
-			row[j * 3 + 2] = rgb[2];
+			row[j * 3 + 2] = rgb[0];
 		}
 		fwrite(row, GetSize().x * 3, 1, file);
 	}
