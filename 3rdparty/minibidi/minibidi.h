@@ -851,8 +851,6 @@ int doShape(BLOCKTYPE line, CHARTYPE* to, int from, int count)
 	int i, j, ligFlag;
 	unsigned char prevTemp, nextTemp;
 	CHARTYPE tempChar;
-	
-	_ASSERTE(_CrtCheckMemory());
 
 	tempChar = 0;
 	ligFlag = 0;
@@ -860,8 +858,6 @@ int doShape(BLOCKTYPE line, CHARTYPE* to, int from, int count)
 	nextTemp = SU;
 	for (i = from; i<count; i++)
 	{
-		_ASSERTE(_CrtCheckMemory());
-
 		/* Get Previous and next Characters type */
 		j = i;
 		while (--j >= 0)
@@ -998,21 +994,16 @@ int doTypes(BLOCKTYPE line, unsigned char paragraphLevel, unsigned char* types,
 	unsigned char overrideStack[MAX_STACK + 2];
 	int stackTop = 0;
 
-	_ASSERTE(_CrtCheckMemory());
 	if (fX)
 	{
 		for (i = 0, j = 0; i<count; i++)
 		{
-			_ASSERTE(_CrtCheckMemory());
-
 			GETCHAR(line, j) = GETCHAR(line, i);
 			if (v2l)
 			{
 				v2l[j] = v2l[i];
 			}
 			tempType = GetType(GETCHAR(line, i));
-
-			_ASSERTE(_CrtCheckMemory());
 
 			switch (tempType)
 			{
@@ -1084,20 +1075,14 @@ int doTypes(BLOCKTYPE line, unsigned char paragraphLevel, unsigned char* types,
 				j++;
 				break;
 			}
-
-			_ASSERTE(_CrtCheckMemory());
 		}
 	}
 	else
 	{
 		j = count;
 
-		_ASSERTE(_CrtCheckMemory());
-
 		for (i = 0; i<count; i++)
 		{
-			_ASSERTE(_CrtCheckMemory());
-
 			tempType = GetType(GETCHAR(line, i));
 			switch (tempType)
 			{
@@ -1118,8 +1103,6 @@ int doTypes(BLOCKTYPE line, unsigned char paragraphLevel, unsigned char* types,
 				break;
 			}
 			types[i] = tempType;
-
-			_ASSERTE(_CrtCheckMemory());
 		}
 	}
 	return j;
@@ -1151,8 +1134,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 	unsigned char tempType, tempTypeSec;
 	int i, j, imax, fX, fAL, fET, fNSM, tempInt;
 	CHARTYPE* shapeTo;
-
-	_ASSERTE(_CrtCheckMemory());
 
 	if (v2l)
 	{
@@ -1188,8 +1169,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 			break;
 		}
 	}
-	_ASSERTE(_CrtCheckMemory());
-
 	if (!fAL && !fX)
 		return 0;
 
@@ -1235,7 +1214,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 	* Here, they're converted to BN.
 	*/
 
-	_ASSERTE(_CrtCheckMemory());
 	count = doTypes(line, paragraphLevel, types, levels, count, fX, v2l);
 	//GETCHAR(line, count) = 0;
 
@@ -1245,7 +1223,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 	* the type of the NSM to the type of the previous character. If the NSM
 	* is at the start of the level run, it will get the type of sor.
 	*/
-	_ASSERTE(_CrtCheckMemory());
 
 	if (fNSM)
 	{
@@ -1261,7 +1238,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 			*/
 		}
 	}
-	_ASSERTE(_CrtCheckMemory());
 
 	/* Rule (W2)
 	* W2. Search backwards from each instance of a European number until the
@@ -1290,7 +1266,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 			}
 		}
 	}
-	_ASSERTE(_CrtCheckMemory());
 
 	/* Rule (W3)
 	* W3. Change all ALs to R.
@@ -1320,7 +1295,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 				types[i] = AN;
 		}
 	}
-	_ASSERTE(_CrtCheckMemory());
 
 	/* Rule (W5)
 	* W5. A sequence of European terminators adjacent to European numbers
@@ -1357,7 +1331,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 			}
 		}
 	}
-	_ASSERTE(_CrtCheckMemory());
 
 	/* Rule (W6)
 	* W6. Otherwise, separators and terminators change to Other Neutral:
@@ -1373,7 +1346,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 			break;
 		}
 	}
-	_ASSERTE(_CrtCheckMemory());
 
 	/* Rule (W7)
 	* W7. Search backwards from each instance of a European number until
@@ -1404,7 +1376,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 			}
 		}
 	}
-	_ASSERTE(_CrtCheckMemory());
 
 
 	/* Rule (N1)
@@ -1449,8 +1420,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 
 		}
 	}
-	_ASSERTE(_CrtCheckMemory());
-
 	/* Rule (N2)
 	* N2. Any remaining neutrals take the embedding direction.
 	*/
@@ -1465,7 +1434,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 				types[i] = R;
 		}
 	}
-	_ASSERTE(_CrtCheckMemory());
 
 	/* Rule (I1)
 	* I1. For all characters with an even (left-to-right) embedding
@@ -1489,7 +1457,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 				levels[i] += 1;
 		}
 	}
-	_ASSERTE(_CrtCheckMemory());
 
 	/* Rule (I2)
 	* I2. For all characters with an odd (right-to-left) embedding direction,
@@ -1504,7 +1471,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 				levels[i] += 1;
 		}
 	}
-	_ASSERTE(_CrtCheckMemory());
 
 	/* Rule (L1)
 	* L1. On each line, reset the embedding level of the following characters
@@ -1528,7 +1494,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 		for (j++; j<count; j++)
 			levels[j] = paragraphLevel;
 	}
-	_ASSERTE(_CrtCheckMemory());
 
 	for (i = 0; i<count; i++)
 	{
@@ -1574,8 +1539,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 	* Combining marks are reordered to the right of each character on an
 	* odd level.
 	*/
-	_ASSERTE(_CrtCheckMemory());
-
 	if (fNSM && reorderCombining)
 	{
 		CHARTYPE temp;
@@ -1608,7 +1571,6 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 	/* Shaping
 	* Shaping is Applied to each run of levels separately....
 	*/
-	_ASSERTE(_CrtCheckMemory());
 
 	if (applyShape)
 	{

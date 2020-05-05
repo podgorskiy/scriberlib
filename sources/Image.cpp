@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <math.h>
 #include <algorithm>
+#include <string.h>
 
 using namespace Scriber;
 

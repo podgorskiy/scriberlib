@@ -52,7 +52,7 @@ namespace Scriber
 		F26p6() = default;
 		F26p6(F26p6 const& v) = default;
 
-		explicit F26p6(float f) : v(static_cast<int>(round(f * 64.0f))) {};
+		explicit F26p6(float f) : v(static_cast<int>(f * 64.0f + 0.5f)) {};
 		explicit F26p6(int i) : v(i * 0x40) {};
 		
 		explicit operator float() const
@@ -99,7 +99,7 @@ namespace Scriber
 		F16p16() = default;
 		F16p16(F16p16 const& v) = default;
 
-		explicit F16p16(float f) : v(static_cast<int>(round(f * 65536.0f))) {};
+		explicit F16p16(float f) : v(static_cast<int>(f * 65536.0f + 0.5f)) {};
 		explicit F16p16(int i) : v(i * 0x10000) {};
 
 		operator float() const

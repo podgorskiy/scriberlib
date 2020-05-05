@@ -172,7 +172,7 @@ bool AcceptSpace(const char*& it)
 }
 
 template<typename T>
-T::Enum AcceptProperty(const char*& it, const char*** prop)
+typename T::Enum AcceptProperty(const char*& it, const char*** prop)
 {
 	while (AcceptSpace(it));
 	const char* it_backup = it;
@@ -223,7 +223,6 @@ Width::Enum AcceptWidth(const char*& it)
 	return Width::None;
 }
 
-std::pair<Weight::Enum, Width::Enum>
 
 int main()
 {

@@ -12,7 +12,7 @@ const GlyphString& StringStash::GetGlyphString(const char* text, u16vec2 dpi, co
 	size_t length = strlen(text);
 	string_hash hash = XXH32(text, length, reinterpret_cast<string_hash&>(dpi) ^ fontHash);
 
-	StringCache::iterator lb = m_stringCache.lower_bound(hash);
+	auto lb = m_stringCache.lower_bound(hash);
 	
 	if (lb != m_stringCache.end() && (hash == lb->first))
 	{
@@ -24,9 +24,9 @@ const GlyphString& StringStash::GetGlyphString(const char* text, u16vec2 dpi, co
 		m_text_utf32.clear();
 		utf8::utf8to32(text, text + length, std::back_inserter(m_text_utf32));
 
-		typedef std::back_insert_iterator<GlyphString> GlyphStringInsert;
+		auto inserter = std::back_inserter(m_glyphs);
 
-		m_stringProcessor(m_text_utf32, font, dpi, std::back_inserter(m_glyphs));
+		m_stringProcessor(m_text_utf32, font, dpi, inserter);
 
 		m_stringCache.insert(lb, StringCache::value_type(hash, m_glyphs));
 	}
