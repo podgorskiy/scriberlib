@@ -32,6 +32,7 @@ source_group("ucdn" FILES ${SC_3DPARTY_UCDN})
 source_group("freetype" FILES ${SC_3DPARTY_FREETYPE})
 source_group("scribe" FILES ${SC_SOURCES})
 
+target_compile_options(scribe  PRIVATE "-Wno-nonnull-compare")
 target_compile_definitions(scribe PRIVATE HAVE_OT HB_NO_MT HAVE_FREETYPE HAVE_UCDN)
 
 if (MSVC)

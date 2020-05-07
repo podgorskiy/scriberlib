@@ -9,6 +9,9 @@ namespace Scriber
 	class TextRenderer
 	{
 	public:
+		TextRenderer(const TextRenderer& other) = delete;
+		TextRenderer& operator=(const TextRenderer&) = delete;
+
 		TextRenderer(IRenderAPIPtr renderAPI);
 		~TextRenderer();
 
@@ -20,18 +23,11 @@ namespace Scriber
 		
 		void GrowBuffers(uint32_t size);
 
+		int m_maxVertexBufferSize;
 		Vertex* m_vertexBuffer;
 		uint16_t* m_indexBuffer;
-		uint16_t m_indexIterator;
 		uint16_t m_vertexIterator;
-
-		int m_maxVertexVufferSize;
-
-		//glm::vec2 m_K;
-		//glm::vec2 m_KUV;
-
-		//glm::ivec2 m_viewportSize;
-		//glm::ivec2 m_textureSize;
+		uint16_t m_indexIterator;
 
 		IRenderAPIPtr m_renderAPI;
 	};

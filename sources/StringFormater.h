@@ -16,8 +16,8 @@ namespace Scriber
 		void Format(utf32string& string, const Font& font, u16vec2 dpi, GlyphStringInsert& inserter);
 
 	private:
-		GlyphBitmapStash* m_glyphStash;
 		LayoutEngine* m_layout;
+		GlyphBitmapStash* m_glyphStash;
 		uint16_t m_empty_characters_replacement;
 	};
 }

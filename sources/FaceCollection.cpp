@@ -56,7 +56,7 @@ static int ForceUCS2(FT_Face ftf)
 	{
 		if (((ftf->charmaps[i]->platform_id == 0) && (ftf->charmaps[i]->encoding_id == 3)) || ((ftf->charmaps[i]->platform_id == 3) && (ftf->charmaps[i]->encoding_id == 1)))
 		{
-			printf("CMap_Language_ID: %d\n", FT_Get_CMap_Language_ID(ftf->charmaps[i]));
+			printf("CMap_Language_ID: %ld\n", FT_Get_CMap_Language_ID(ftf->charmaps[i]));
 			return FT_Set_Charmap(ftf, ftf->charmaps[i]);
 		}
 	}

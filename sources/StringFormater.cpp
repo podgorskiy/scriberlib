@@ -10,7 +10,7 @@ StringFormater::StringFormater(LayoutEngine* le, GlyphBitmapStash* gs)
 
 void StringFormater::Format(utf32string& string, const Font& font, u16vec2 dpi, GlyphStringInsert& inserter)
 {
-	const LayoutDataString& layout = m_layout->Process(string, 0, string.size() - 1, dpi, font);
+	const LayoutDataString& layout = m_layout->Process(string, 0, string.size(), dpi, font);
 
 	uint16_t lastGlyph = 0;
 

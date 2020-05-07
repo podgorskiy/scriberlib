@@ -11,29 +11,29 @@ enum
 };
 
 TextRenderer::TextRenderer(IRenderAPIPtr renderAPI)
-	: m_maxVertexVufferSize(0)
+	: m_maxVertexBufferSize(0)
 	, m_vertexBuffer(nullptr)
 	, m_indexBuffer(nullptr)
 	, m_vertexIterator(0)
 	, m_indexIterator(0)
-	, m_renderAPI(renderAPI)
+	, m_renderAPI(std::move(renderAPI))
 {
 	GrowBuffers(k_initialBufferSize);
 }
 
 void TextRenderer::GrowBuffers(uint32_t size)
 {
-	if (m_maxVertexVufferSize < int(size))
+	if (m_maxVertexBufferSize < int(size))
 	{
-		m_maxVertexVufferSize = NextPowerOf2(size);
+		m_maxVertexBufferSize = NextPowerOf2(size);
 
-		m_vertexBuffer = static_cast<Vertex*>(realloc(m_vertexBuffer, m_maxVertexVufferSize * sizeof(Vertex)));
-		m_indexBuffer = static_cast<uint16_t*>(realloc(m_indexBuffer, m_maxVertexVufferSize * 6 / 4 * sizeof(uint16_t)));
+		m_vertexBuffer = static_cast<Vertex*>(realloc(m_vertexBuffer, m_maxVertexBufferSize * sizeof(Vertex)));
+		m_indexBuffer = static_cast<uint16_t*>(realloc(m_indexBuffer, m_maxVertexBufferSize * 6 / 4 * sizeof(uint16_t)));
 
 		int vertexIterator = 0;
 		int indexIterator = 0;
 
-		for (int i = 0; i < m_maxVertexVufferSize / 4; ++i)
+		for (int i = 0; i < m_maxVertexBufferSize / 4; ++i)
 		{
 			m_indexBuffer[indexIterator + 0] = vertexIterator + 0;
 			m_indexBuffer[indexIterator + 1] = vertexIterator + 1;
@@ -49,8 +49,8 @@ void TextRenderer::GrowBuffers(uint32_t size)
 
 TextRenderer::~TextRenderer()
 {
-	free(m_vertexBuffer);
-	free(m_indexBuffer);
+//	free(m_vertexBuffer);
+//	free(m_indexBuffer);
 	m_vertexBuffer = nullptr;
 	m_indexBuffer = nullptr;
 }
@@ -66,7 +66,7 @@ void TextRenderer::SumbitGlyphString(const GlyphString& glyphString, const ivec2
 	int lowestPoint = 0;
 	int textMaxWidth = 0;
 
-	int startVertex = m_vertexIterator;
+	// int startVertex = m_vertexIterator;
 
 	for (int i = 0, l = glyphString.size(); i != l; ++i)
 	{
@@ -161,33 +161,8 @@ void TextRenderer::SubmitGlyph(const ivec2& position, const Glyph& glyph)
 
 void TextRenderer::CommitStashed()
 {
-	m_renderAPI->Render(m_vertexBuffer, m_indexBuffer, m_indexIterator / 3);
+	m_renderAPI->Render(m_vertexBuffer, m_indexBuffer, m_vertexIterator, m_indexIterator / 3);
 
 	m_indexIterator = 0;
 	m_vertexIterator = 0;
-	/*
-	if (shader->u_texture.Valid())
-	{
-		shader->u_texture.SetValue(0);
-	}
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	{
-		glEnableVertexAttribArray((int)shader->positionAttribute);
-		glVertexAttribPointer((int)shader->positionAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), m_vertexCache);
-		glEnableVertexAttribArray((int)shader->uvAttribute);
-		glVertexAttribPointer((int)shader->uvAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<float*>(m_vertexCache) + 2);
-		glEnableVertexAttribArray((int)shader->colorAttribute);
-		glVertexAttribPointer((int)shader->colorAttribute, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(Vertex), reinterpret_cast<float*>(m_vertexCache) + 4);
-		glDrawElements(GL_TRIANGLES, m_indexCacheIt, GL_UNSIGNED_SHORT, m_indexCache);
-		glDisableVertexAttribArray((int)shader->positionAttribute);
-		glDisableVertexAttribArray((int)shader->uvAttribute);
-		glDisableVertexAttribArray((int)shader->colorAttribute);
-	}
-
-	m_vertexCacheIt = 0;
-	m_indexCacheIt = 0;
-	*/
 }

@@ -35,7 +35,7 @@ namespace Scriber
 
 		virtual void ClearTexture() = 0;
 
-		virtual void Render(Vertex* vertexBuffer, uint16_t* indexBuffer, uint16_t primitiveCount) = 0;
+		virtual void Render(Vertex* vertexBuffer, uint16_t* indexBuffer, uint16_t vertex_count, uint16_t primitiveCount) = 0;
 	};
 
 	typedef std::shared_ptr<IRenderAPI> IRenderAPIPtr;
@@ -50,24 +50,24 @@ namespace Scriber
 			m_screen = Image::Empty(ivec2(1024), Image::RG8, 1);
 		}
 
-		~SoftwareRenderAPI() {}
+		~SoftwareRenderAPI() =default;
 
-		virtual void SaveTextureToFile() override
+		void SaveTextureToFile() override
 		{
 			m_cacheTexture.SaveToTGA("TestCache.tga");
 		}
 
-		virtual void UpdateTexture(Image image, u16vec2 pos) override
+		void UpdateTexture(Image image, u16vec2 pos) override
 		{
 			m_cacheTexture.OpenView(ivec2(pos), image.GetSize()).Assign(image);
 		}
 
-		virtual void ClearTexture() override
+		void ClearTexture() override
 		{
 			m_cacheTexture.Clear();
 		}
 
-		virtual void Render(Vertex* vertexBuffer, uint16_t* indexBuffer, uint16_t primitiveCount) override
+		void Render(Vertex* vertexBuffer, uint16_t* indexBuffer, uint16_t vertex_count, uint16_t primitiveCount) override
 		{
 			for (int i = 0; i < primitiveCount / 2; ++i)
 			{

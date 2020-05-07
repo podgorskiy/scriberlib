@@ -29,21 +29,11 @@ GlyphBitmapStash::GlyphBitmapStash(FT_Library lib, FaceCollection* fc, IRenderAP
 	, m_maxHeight(0)
 	, m_spacing(2)
 	, m_currentPos(m_spacing)
-	, m_renderAPI(renderAPI)
+	, m_renderAPI(std::move(renderAPI))
+	, m_stroker(nullptr)
+	, m_glyph({{F26p6(0), F26p6(0), F26p6(0), i16vec2(0), u16vec2(0)} ,0, u16vec2(0), 0})
 {
 	FT_Stroker_New(lib, &m_stroker);
-
-	/*
-	m_rawTexture = Texture::GenerateTexture();
-	m_rawTexture->Bind(0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, k_textureSizeX, k_textureSizeY, 0, GL_RG, GL_UNSIGNED_BYTE, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	m_rawTexture->UnBind();
-	*/
 
 	//m_backeryBuffer.Init(k_textureSizeX, k_textureSizeY, false, false);
 }
@@ -175,7 +165,7 @@ Glyph& GlyphBitmapStash::RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyph
     }
 }
 
-void GlyphBitmapStash::Stash(Glyph& glyph, const FT_BitmapGlyph bitmapGlyph, const FT_BitmapGlyph outlineBitmapGlyph, UserData userdata)
+void GlyphBitmapStash::Stash(Glyph& glyph, FT_BitmapGlyph bitmapGlyph, FT_BitmapGlyph outlineBitmapGlyph, UserData userdata)
 {
 	Image image;
 
@@ -240,23 +230,6 @@ void GlyphBitmapStash::Stash(Glyph& glyph, const FT_BitmapGlyph bitmapGlyph, con
 }
 
 /*
-void GlyphBitmapStash::PutGlyphToCache(GlyphCacheEntry& glyph, const uint8_t* bitmap, const uint8_t* bitmapOutline, const uint8_t shadow)
-{	
-	m_rawTexture->Bind(0);
-
-	GLint oldUnpackAlignment;
-	glGetIntegerv(GL_UNPACK_ALIGNMENT, &oldUnpackAlignment);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-	glTexSubImage2D(GL_TEXTURE_2D, 0, m_cachePosX, m_cachePosY, glyph.bitmapWidth, glyph.bitmapHeight, GL_RG, GL_UNSIGNED_BYTE, m_bitmapBuffer);
-	m_rawTexture->UnBind();
-
-	if (oldUnpackAlignment != 1)
-	{
-		glPixelStorei(GL_UNPACK_ALIGNMENT, oldUnpackAlignment);
-	}
-}
-
 void GlyphBitmapStash::Bake(Shader* shader)
 {
 	if(m_backeCacheIt > 0)
@@ -285,8 +258,5 @@ void GlyphBitmapStash::Purge()
 	m_maxHeight = m_spacing;
 
 	m_renderAPI->ClearTexture();
-
-	//char data[2] = { 0 };
-	//glClearTexImage(GL_TEXTURE_2D, 0, GL_RG8, GL_UNSIGNED_BYTE, &data);
 }
 

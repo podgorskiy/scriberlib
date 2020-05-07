@@ -57,6 +57,19 @@ namespace Scriber
 				stringStash.AssignStringProcessor(std::bind(&StringFormater::Format, &stringFormater, _1, _2, _3, _4));
 			};
 
+			explicit DriverImpl(IRenderAPIPtr renderer)
+				: faceCollection(lib.lib)
+				, layoutEngine(&faceCollection)
+				, renderAPI(std::move(renderer))
+				, glyphBitmapStash(lib.lib, &faceCollection, renderAPI)
+				, stringFormater(&layoutEngine, &glyphBitmapStash)
+				, textRenderer(renderAPI)
+				, m_dpi(72)
+			{
+				using namespace std::placeholders;
+				stringStash.AssignStringProcessor(std::bind(&StringFormater::Format, &stringFormater, _1, _2, _3, _4));
+			};
+
 			DriverImpl(DriverImpl const&) = delete;
 			DriverImpl& operator=(DriverImpl const&) = delete;
 
@@ -188,6 +201,11 @@ void Driver::Render()
 	m_fontRenderer->DrawCache(m_textShader);
 	m_glyphCache->GetTexture()->UnBind();
 	*/
+}
+
+void Driver::SetBackend(IRenderAPIPtr renderAPI)
+{
+	m_impl.reset(new detail::DriverImpl(std::move(renderAPI)));
 }
 
 /*

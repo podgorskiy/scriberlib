@@ -36,7 +36,7 @@ Image Image::Empty(const Image& sameAs)
 Image Image::FromUnalignedData(const void* data, DataType d, ivec2 size, uint8_t alignment)
 {
 	Image im = Empty(size, d, alignment);
-	size_t bpp = im.GetBPP();
+	// size_t bpp = im.GetBPP();
 
 	for (int j = 0; j < im.size.y; ++j)
 	{
@@ -158,7 +158,7 @@ Image Image::OpenView(const ivec2 pos, const ivec2 size)
 Image Image::Copy() const
 {
 	Image im = Empty(size, dataType, alignment);
-	size_t bpp = GetBPP();
+	// size_t bpp = GetBPP();
 
 	for (int j = 0; j < im.size.y; ++j)
 	{
@@ -193,8 +193,6 @@ int Image::cols() const
 
 void Image::SaveToTGA(const char * filename)
 {
-	unsigned char* p = GetRow<uint8_t>(0);
-
 	FILE* file = fopen(filename, "wb");
 	char buff[18];
 	int headerSize = sizeof(buff);

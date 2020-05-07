@@ -91,9 +91,9 @@ static int get_comp_index(uint32_t code, const Reindex *idx)
 
     for (i = 0; idx[i].start; i++) {
         const Reindex *cur = &idx[i];
-        if (code < cur->start)
+        if (code < (uint32_t)cur->start)
             return -1;
-        if (code <= cur->start + cur->count) {
+        if (code <= (uint32_t)(cur->start + cur->count)) {
             return cur->index + (code - cur->start);
         }
     }

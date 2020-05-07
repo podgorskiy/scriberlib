@@ -13,6 +13,9 @@ namespace Scriber
 	class GlyphBitmapStash
 	{
 	public:
+		GlyphBitmapStash(const GlyphBitmapStash& other) = delete;
+		GlyphBitmapStash& operator=(const GlyphBitmapStash&) = delete;
+
 		GlyphBitmapStash(FT_Library lib, FaceCollection* fc, IRenderAPIPtr rednerAPI);
 		~GlyphBitmapStash();
 
@@ -24,25 +27,21 @@ namespace Scriber
 		typedef uint32_t GlyphHash;
 		typedef std::map<GlyphHash, Glyph> GlyphMap;
 
-		void Stash(Glyph& glyph, const FT_BitmapGlyph bitmapGlyph, const FT_BitmapGlyph outlineBitmapGlyph, UserData userdata);
+		void Stash(Glyph& glyph, FT_BitmapGlyph bitmapGlyph, FT_BitmapGlyph outlineBitmapGlyph, UserData userdata);
 		
 		void ResizeBitmap(uint16_t newSize);
-
-		ivec2 m_stashTextureSize;
-		int m_spacing;
-
-		u16vec2 m_currentPos;
-		uint16_t m_maxHeight;
 
 		GlyphMap m_glyphs;
 		
 		uint8_t* m_bitmap;
 		uint16_t m_bitmapSize;
-
-		FT_Stroker m_stroker;
 		FaceCollection* m_fc;
-
+		ivec2 m_stashTextureSize;
+		uint16_t m_maxHeight;
+		int m_spacing;
+		u16vec2 m_currentPos;
 		IRenderAPIPtr m_renderAPI;
+		FT_Stroker m_stroker;
 		Glyph m_glyph;
 	};
 }

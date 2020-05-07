@@ -54,6 +54,9 @@ namespace Scriber
 		UserData userdata;
 	};
 
+	class IRenderAPI;
+	typedef std::shared_ptr<IRenderAPI> IRenderAPIPtr;
+
 	class Driver
 	{
 	public:
@@ -78,6 +81,8 @@ namespace Scriber
 		void CleanStash();
 
 		void Render();
+
+		void SetBackend(IRenderAPIPtr renderer);
 
 	private:
 		detail::DriverImplPtr m_impl;

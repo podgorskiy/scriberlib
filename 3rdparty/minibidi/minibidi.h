@@ -967,7 +967,7 @@ int doShape(BLOCKTYPE line, CHARTYPE* to, int from, int count)
 				{
 					int id = GETCHAR(line, i);
 					//assert(id < lenof(shapetypes));
-					if (id < lenof(shapetypes))
+					if (id < (int)(lenof(shapetypes)))
 						to[i] = SISOLATED(id);
 				}
 				break;
@@ -1132,7 +1132,8 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 	unsigned char* levels;
 	unsigned char paragraphLevel;
 	unsigned char tempType, tempTypeSec;
-	int i, j, imax, fX, fAL, fET, fNSM, tempInt;
+	int i, j, fX, fAL, fET, fNSM, tempInt;
+	//int imax;
 	CHARTYPE* shapeTo;
 
 	if (v2l)
@@ -1613,7 +1614,7 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 	* level or higher
 	*/
 	/* we flip the character string and leave the level array */
-	imax = 0;
+	// imax = 0;
 	i = 0;
 	tempType = levels[0];
 	while (i < count)
@@ -1621,7 +1622,7 @@ int doBidi(BLOCKTYPE line, int count, int applyShape, int reorderCombining, int 
 		if (levels[i] > tempType)
 		{
 			tempType = levels[i];
-			imax = i;
+			// imax = i;
 		}
 		i++;
 	}
