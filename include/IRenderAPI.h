@@ -36,6 +36,10 @@ namespace Scriber
 		virtual void ClearTexture() = 0;
 
 		virtual void Render(Vertex* vertexBuffer, uint16_t* indexBuffer, uint16_t vertex_count, uint16_t primitiveCount) = 0;
+
+		virtual int GetTextureSize() { return 1024; }
+
+		virtual int GetSpacing() { return 3; }
 	};
 
 	typedef std::shared_ptr<IRenderAPI> IRenderAPIPtr;

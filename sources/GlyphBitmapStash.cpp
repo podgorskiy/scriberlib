@@ -11,31 +11,21 @@
 
 using namespace Scriber;
 
-/*
-int const GlyphCache::k_bakePoolSize = 1000;
-int const GlyphCache::k_textureSizeX = 1024;
-int const GlyphCache::k_textureSizeY = 1024;
-int const GlyphCache::k_spacing = 3;
-*/
 
 GlyphBitmapStash::GlyphBitmapStash(FT_Library lib, FaceCollection* fc, IRenderAPIPtr renderAPI)
-    //: m_cachePosX(k_spacing)
-    //, m_cachePosY(k_spacing)
-    //, m_cacheMaxY(k_spacing)
+
 	: m_bitmap(nullptr)
 	, m_bitmapSize(0)
 	, m_fc(fc)
-	, m_stashTextureSize(1024)
+	, m_stashTextureSize(renderAPI->GetTextureSize())
 	, m_maxHeight(0)
-	, m_spacing(2)
+	, m_spacing(renderAPI->GetSpacing())
 	, m_currentPos(m_spacing)
 	, m_renderAPI(std::move(renderAPI))
 	, m_stroker(nullptr)
 	, m_glyph({{F26p6(0), F26p6(0), F26p6(0), i16vec2(0), u16vec2(0)} ,0, u16vec2(0), 0})
 {
 	FT_Stroker_New(lib, &m_stroker);
-
-	//m_backeryBuffer.Init(k_textureSizeX, k_textureSizeY, false, false);
 }
 
 void GlyphBitmapStash::ResizeBitmap(uint16_t newSize)
@@ -229,27 +219,6 @@ void GlyphBitmapStash::Stash(Glyph& glyph, FT_BitmapGlyph bitmapGlyph, FT_Bitmap
 	//m_renderAPI->SaveTextureToFile();
 }
 
-/*
-void GlyphBitmapStash::Bake(Shader* shader)
-{
-	if(m_backeCacheIt > 0)
-	{
-		m_backeryBuffer.BindFBO();
-		glViewport(0, 0, k_textureSizeX, k_textureSizeY);
-		m_rawTexture->Bind(0);
-		for(int i =0; i < m_backeCacheIt; ++i)
-		{
-			glm::vec2 uv0 = glm::vec2(m_backeCache[i].uv0.x,  m_backeCache[i].uv0.y + m_backeCache[i].uvt.y);
-			glm::vec2 uvt = glm::vec2(m_backeCache[i].uvt.x, -m_backeCache[i].uvt.y);
-			m_backerySprite->SetUv0(uv0);
-			m_backerySprite->SetUvt(uvt);
-			m_backerySprite->Draw(*shader);
-		}		
-	}
-	m_backeCacheIt = 0;
-}
-
-*/
 
 void GlyphBitmapStash::Purge()
 {
