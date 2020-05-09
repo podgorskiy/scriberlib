@@ -52,9 +52,6 @@ namespace Scriber
 		LayoutDataString        m_shapedData;
 		LayoutDataString        m_fragmentshapedData;
 		utf32string             m_fragment;
-
-		hb_buffer_t*			m_HBbuf;
-
 		LayoutMode::Enum        m_mode;
 	};
 }

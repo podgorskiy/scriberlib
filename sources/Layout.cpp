@@ -15,9 +15,6 @@ using namespace Scriber;
 
 LayoutEngine::LayoutEngine(FaceCollection* collection) :m_faceCollection(collection)
 {
-#ifdef USE_HARFBUZZ
-	m_HBbuf = hb_buffer_create();
-#endif
 }
 
 void LayoutEngine::ShapeFragment(utf32string& text, FaceID faceId, u16vec2 dpi, const Font& font)
@@ -25,6 +22,7 @@ void LayoutEngine::ShapeFragment(utf32string& text, FaceID faceId, u16vec2 dpi, 
 	FT_Face face = m_faceCollection->GetFace(faceId);
 
 #ifdef USE_HARFBUZZ
+	static auto m_HBbuf = hb_buffer_create();
 	hb_font_t* hb_font = m_faceCollection->GetHBFontByFaceId(faceId);
 	
 	FT_Set_Char_Size(hb_ft_font_get_face(hb_font), 0, F26p6(font.height).v, dpi.x, dpi.y);
