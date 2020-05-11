@@ -199,6 +199,9 @@ void GlyphBitmapStash::Stash(Glyph& glyph, FT_BitmapGlyph bitmapGlyph, FT_Bitmap
 		glyph.m_metrics.horizontalBearing.y = bitmapGlyph->top;
 	}
 
+	if (bitmapGlyph->bitmap.buffer == nullptr)
+		return;
+
 	if (glyph.m_metrics.glyphSize.x + m_currentPos.x + m_spacing >= m_stashTextureSize.x)
 	{
 		m_currentPos.x = m_spacing;
