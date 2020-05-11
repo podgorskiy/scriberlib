@@ -151,6 +151,8 @@ void TextRenderer::SubmitGlyph(const ivec2& position, const Glyph& glyph)
 	v1.uv.x = v3.uv.x;
 	v2.uv.y = v3.uv.y;
 
+	GrowBuffers(m_vertexIterator + 4);
+
 	m_vertexBuffer[m_vertexIterator + 0] = v0;
 	m_vertexBuffer[m_vertexIterator + 1] = v1;
 	m_vertexBuffer[m_vertexIterator + 2] = v2;
