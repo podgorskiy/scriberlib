@@ -49,8 +49,8 @@ void TextRenderer::GrowBuffers(uint32_t size)
 
 TextRenderer::~TextRenderer()
 {
-//	free(m_vertexBuffer);
-//	free(m_indexBuffer);
+	free(m_vertexBuffer);
+	free(m_indexBuffer);
 	m_vertexBuffer = nullptr;
 	m_indexBuffer = nullptr;
 }
@@ -66,7 +66,7 @@ void TextRenderer::SumbitGlyphString(const GlyphString& glyphString, const ivec2
 	int lowestPoint = 0;
 	int textMaxWidth = 0;
 
-	// int startVertex = m_vertexIterator;
+	int startVertex = m_vertexIterator;
 
 	for (int i = 0, l = glyphString.size(); i != l; ++i)
 	{
@@ -93,40 +93,38 @@ void TextRenderer::SumbitGlyphString(const GlyphString& glyphString, const ivec2
 	highestPoint -= position.y;
 	lowestPoint -= position.y;
 
-	/*
-	if ((alignment & TextEngine::Alignment::RIGHT) != 0)
+	if ((alignment & Align::Right) != 0)
 	{
-		float delta = textMaxWidth * 2.0f / m_viewportSize.x;
-		for (int i = startVertex; i != m_vertexCacheIt; ++i)
+		int delta = textMaxWidth;
+		for (int i = startVertex; i != m_vertexIterator; ++i)
 		{
-			m_vertexCache[i].p.x -= delta;
+			m_vertexBuffer[i].pos.x -= delta;
 		}
 	}
-	else if ((alignment & TextEngine::Alignment::HCENTER) != 0)
+	else if ((alignment & Align::HCenter) != 0)
 	{
-		float delta = textMaxWidth * 2.0f / m_viewportSize.x / 2.0f;
-		for (int i = startVertex; i != m_vertexCacheIt; ++i)
+		int delta = textMaxWidth / 2;
+		for (int i = startVertex; i != m_vertexIterator; ++i)
 		{
-			m_vertexCache[i].p.x -= delta;
+			m_vertexBuffer[i].pos.x -= delta;
 		}
 	}
-	if ((alignment & TextEngine::Alignment::TOP) != 0)
+	if ((alignment & Align::Top) != 0)
 	{
-		float delta = highestPoint * 2.0f / m_viewportSize.y;
-		for (int i = startVertex; i != m_vertexCacheIt; ++i)
+		int delta = highestPoint;
+		for (int i = startVertex; i != m_vertexIterator; ++i)
 		{
-			m_vertexCache[i].p.y += delta;
+			m_vertexBuffer[i].pos.y += delta;
 		}
 	}
-	else if ((alignment & TextEngine::Alignment::VCENTER) != 0)
+	else if ((alignment & Align::VCenter) != 0)
 	{
-		float delta = -(highestPoint + lowestPoint) * 2.0f / m_viewportSize.y / 2.0f;
-		for (int i = startVertex; i != m_vertexCacheIt; ++i)
+		int delta = -(highestPoint + lowestPoint) / 2;
+		for (int i = startVertex; i != m_vertexIterator; ++i)
 		{
-			m_vertexCache[i].p.y -= delta;
+			m_vertexBuffer[i].pos.y -= delta;
 		}
 	}
-	*/
 }
 
 void TextRenderer::SubmitGlyph(const ivec2& position, const Glyph& glyph)
