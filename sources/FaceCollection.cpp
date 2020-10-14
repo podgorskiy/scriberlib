@@ -25,7 +25,8 @@ TypefaceID FaceCollection::NewTypeface(const char* name, int priority)
 	TypefaceID id = m_typefaces.size();
 	m_typefaces.push_back(Typeface());
 	m_typefaceNames[name] = id;
-	
+	m_typefaces.back().priority = priority;
+
 	m_typefacesOrder.resize(m_typefaces.size());
 
 	int n = 0;
