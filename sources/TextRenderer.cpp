@@ -79,7 +79,7 @@ void TextRenderer::SumbitGlyphString(const GlyphString& glyphString, const ivec2
 			continue;
 		}
 
-		highestPoint = std::max(glyphPosition.y - int(glyph.m_metrics.ascender), highestPoint);
+		highestPoint = std::min(glyphPosition.y - int(glyph.m_metrics.ascender), highestPoint);
 		lowestPoint = std::max(glyphPosition.y - int(glyph.m_metrics.descender), lowestPoint);
 
 		ivec2 bitmapPos = glyphPosition + ivec2(glyph.m_metrics.horizontalBearing.x, -glyph.m_metrics.horizontalBearing.y);
@@ -114,12 +114,12 @@ void TextRenderer::SumbitGlyphString(const GlyphString& glyphString, const ivec2
 		int delta = highestPoint;
 		for (int i = startVertex; i != m_vertexIterator; ++i)
 		{
-			m_vertexBuffer[i].pos.y += delta;
+			m_vertexBuffer[i].pos.y -= delta;
 		}
 	}
 	else if ((alignment & Align::VCenter) != 0)
 	{
-		int delta = -(highestPoint + lowestPoint) / 2;
+		int delta = (highestPoint + lowestPoint) / 2;
 		for (int i = startVertex; i != m_vertexIterator; ++i)
 		{
 			m_vertexBuffer[i].pos.y -= delta;
