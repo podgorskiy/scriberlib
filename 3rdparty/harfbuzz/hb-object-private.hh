@@ -203,6 +203,11 @@ static inline Type *hb_object_reference (Type *obj)
 template <typename Type>
 static inline bool hb_object_destroy (Type *obj)
 {
+  if (!obj)
+  {
+  	return false;
+  }
+
   hb_object_trace (obj, HB_FUNC);
   return obj->header.destroy ();
 }
