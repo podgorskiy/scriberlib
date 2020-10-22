@@ -24,6 +24,7 @@ GlyphBitmapStash::GlyphBitmapStash(FT_Library lib, FaceCollection* fc, IRenderAP
 	, m_renderAPI(std::move(renderAPI))
 	, m_stroker(nullptr)
 	, m_glyph({{F26p6(0), F26p6(0), F26p6(0), i16vec2(0), u16vec2(0)} ,0, u16vec2(0), 0})
+	, m_was_overflowed(false)
 {
 	FT_Stroker_New(lib, &m_stroker);
 }
@@ -70,15 +71,23 @@ Glyph& GlyphBitmapStash::RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyph
 	{
 		GlyphID glyphIndex;
 		FaceID faceId;
-		Font font;
+		uint16_t height;
+		FontStyle::Enum style;
+		uint16_t stroke;
 		u16vec2 dpi;
-	} data = { glyphIndex, faceId, font, dpi };
+	} data;
+	memset(&data, 0, sizeof(Data));
 	
-	data.font.preferred_tf = 0;
+	data.glyphIndex = glyphIndex;
+	data.faceId = faceId;
+	data.height = font.height;
+	data.style = font.style;
+	data.stroke = font.stroke;
+	data.dpi = dpi;
 
 	GlyphHash hash = XXH32(&data, sizeof(Data), 0);
 
-	GlyphMap::iterator lb = m_glyphs.lower_bound(hash);
+	auto lb = m_glyphs.lower_bound(hash);
 
 	if (lb != m_glyphs.end() && (hash == lb->first))
 	{
@@ -212,6 +221,7 @@ void GlyphBitmapStash::Stash(Glyph& glyph, FT_BitmapGlyph bitmapGlyph, FT_Bitmap
 	if (m_maxHeight > m_stashTextureSize.y)
 	{
 		Purge();
+		m_was_overflowed = true;
 	}
 
 	glyph.m_cacheUV = m_currentPos;

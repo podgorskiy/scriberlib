@@ -183,8 +183,13 @@ void Driver::SetDPI(uint16_t x, uint16_t y)
 
 void Driver::DrawLabel(const char* text, int position_x, int position_y, const Font& font, Align::Enum alignment)
 {
-	const GlyphString& glyphString = m_impl->stringStash.GetGlyphString(text, m_impl->m_dpi, font);
-	m_impl->textRenderer.SumbitGlyphString(glyphString, ivec2(position_x, position_y), m_impl->m_dpi, font, alignment);
+	const GlyphString* glyphString = &m_impl->stringStash.GetGlyphString(text, m_impl->m_dpi, font);
+	if (m_impl->glyphBitmapStash.CheckIfOverflowedAndResetFlag())
+	{
+		m_impl->stringStash.Purge();
+		glyphString = &m_impl->stringStash.GetGlyphString(text, m_impl->m_dpi, font);
+	}
+	m_impl->textRenderer.SumbitGlyphString(*glyphString, ivec2(position_x, position_y), m_impl->m_dpi, font, alignment);
 }
 
 void Driver::CleanStash()
