@@ -106,21 +106,21 @@ Glyph& GlyphBitmapStash::RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyph
 			FT_Glyph ftglyph = nullptr;
 
 			FT_Error error = FT_Get_Glyph(face->glyph, &ftglyph);
-						
-			//bool use_kerning = FT_HAS_KERNING(face) != 0;
-			//if (use_kerning && previousGlyphIndex != 0 && glyphIndex != 0)
-			//{
-			//	FT_Vector  delta;
-			//	FT_Get_Kerning(face, previousGlyphIndex, glyphIndex, FT_KERNING_DEFAULT, &delta);
-			//	newGlyph.metricsHoriAdvance += F26D6ToFloat(delta.x);
-			//}
-			
+
 			if (error == FT_Err_Ok)
 			{
 				m_glyph.m_metrics.horiAdvance.v = face->glyph->metrics.horiAdvance;
 				//glyph.m_metrics.vertAdvance.v = face->glyph->metrics.vertAdvance;
 				m_glyph.m_metrics.ascender.v = face->size->metrics.ascender;
 				m_glyph.m_metrics.descender.v = face->size->metrics.descender;
+
+				bool use_kerning = FT_HAS_KERNING( face );
+				if (use_kerning && previousGlyphIndex != 0 && glyphIndex != 0)
+				{
+					FT_Vector  delta;
+					FT_Get_Kerning(face, previousGlyphIndex, glyphIndex, FT_KERNING_DEFAULT, &delta);
+					m_glyph.m_metrics.horiAdvance.v += delta.x;
+				}
 
 				FT_BitmapGlyph ftbitmapGlyph = ConvertToBitmapGlyph(ftglyph);
 
