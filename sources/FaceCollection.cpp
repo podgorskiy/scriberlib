@@ -81,8 +81,6 @@ void FaceCollection::AndFontToTypeface(TypefaceID tf, const char* filename, Font
 			printf("%s\n", name.c_str());
 		}
 
-		/*
-
 		FT_SfntName name;
 		for (int i = 0, l = FT_Get_Sfnt_Name_Count(face); i < l; ++i)
 		{
@@ -94,15 +92,14 @@ void FaceCollection::AndFontToTypeface(TypefaceID tf, const char* filename, Font
 		FT_Error er = FT_Get_PS_Font_Info(face, &info);
 		if (er == 0)
 		{
-			printf("%s\n", info.version);
-			printf("%s\n", info.notice);
-			printf("%s\n", info.full_name);
-			printf("%s\n", info.family_name);
-			printf("%s\n", info.weight);
-			printf("italic_angle: %d\n", info.italic_angle);
+#define nullguard(X) X != nullptr ? X : ""
+			printf("%s\n", nullguard(info.version));
+			printf("%s\n", nullguard(info.notice));
+			printf("%s\n", nullguard(info.full_name));
+			printf("%s\n", nullguard(info.family_name));
+			printf("%s\n", nullguard(info.weight));
+			printf("italic_angle: %d\n", (int)info.italic_angle);
 		}
-		*/
-		
 		m_typefaces[tf].m_faces[style] = face;
 		m_typefaces[tf].m_HBfonts[style] = hb_ft_font_create(face, NULL);
 	}
