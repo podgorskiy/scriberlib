@@ -3,7 +3,7 @@
 
 #include <freetype.h>
 
-#define USE_HARFBUZZ
+// #define USE_HARFBUZZ
 #ifdef USE_HARFBUZZ
 
 #include <hb.h>
@@ -44,13 +44,13 @@ void LayoutEngine::ShapeFragment(utf32string& text, FaceID faceId, u16vec2 dpi, 
 #endif
 
 	m_fragmentshapedData.clear();
-	if (false)
+#ifndef USE_HARFBUZZ
 	{
 		for (int i = 0, s = text.size(); i < s; ++i)
 		{
 			FT_UInt glyphIndex = FT_Get_Char_Index(face, text[i]);
 			LayoutData layout;
-			layout.advance.v = 0;
+			layout.advance.v = 0xFFFF;
 			layout.offset = i16vec2(0);
 			layout.glyph = static_cast<uint16_t>(glyphIndex);
 			layout.group = static_cast<uint16_t>(i);
@@ -59,7 +59,7 @@ void LayoutEngine::ShapeFragment(utf32string& text, FaceID faceId, u16vec2 dpi, 
 			m_fragmentshapedData.push_back(layout);
 		}
 	}
-	else
+#else
 	{
 		for (int i = 0; i < (int)glyph_count; ++i)
 		{
@@ -75,6 +75,7 @@ void LayoutEngine::ShapeFragment(utf32string& text, FaceID faceId, u16vec2 dpi, 
 			m_fragmentshapedData.push_back(layout);
 		}
 	}
+#endif
 }
 
 void LayoutEngine::FlushShapedData(const std::vector<LayoutData>& data)

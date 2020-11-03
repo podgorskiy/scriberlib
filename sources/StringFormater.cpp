@@ -22,7 +22,8 @@ void StringFormater::Format(utf32string& string, const Font& font, u16vec2 dpi, 
 		glyph.m_color = font.color;
 		glyph.m_metrics.horizontalBearing.x += it->offset.x;
 		glyph.m_metrics.horizontalBearing.y += it->offset.y;
-		glyph.m_metrics.horiAdvance.v = it->advance.v;
+		if (it->advance.v != 0xFFFF)
+			glyph.m_metrics.horiAdvance.v = it->advance.v;
 
 		inserter = glyph;
 
