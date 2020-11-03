@@ -55,10 +55,12 @@ TextRenderer::~TextRenderer()
 	m_indexBuffer = nullptr;
 }
 
-void TextRenderer::SumbitGlyphString(const GlyphString& glyphString, const ivec2& _position, u16vec2 dpi, const Font& font, Align::Enum alignment)
+void TextRenderer::SumbitGlyphString(const GlyphString& glyphString, const ivec2& _position, u16vec2 dpi, const Font& font, Align::Enum alignment, float true_hight)
 {
-	ivec2 position = toPixel(_position, dpi);
-	int fontHeight = toPixel(font.height, dpi.y);
+	ivec2 position = toPixel(_position * 256, dpi);
+	int scale = (int)(true_hight * 256.f / font.height);
+	if (true_hight == 0.f) scale = 256;
+	int fontHeight = toPixel(font.height * scale, dpi.y);
 
 	ivec2 glyphPosition = position;
 
@@ -79,19 +81,23 @@ void TextRenderer::SumbitGlyphString(const GlyphString& glyphString, const ivec2
 			continue;
 		}
 
-		highestPoint = std::min(glyphPosition.y - int(glyph.m_metrics.ascender), highestPoint);
-		lowestPoint = std::max(glyphPosition.y - int(glyph.m_metrics.descender), lowestPoint);
+		highestPoint = std::min(glyphPosition.y - (glyph.m_metrics.ascender.v * scale + 31) / 64, highestPoint);
+		lowestPoint = std::max(glyphPosition.y - (glyph.m_metrics.descender.v * scale + 31) / 64, lowestPoint);
 
-		ivec2 bitmapPos = glyphPosition + ivec2(glyph.m_metrics.horizontalBearing.x, -glyph.m_metrics.horizontalBearing.y);
+		ivec2 bitmapPos = glyphPosition + ivec2(glyph.m_metrics.horizontalBearing.x, -glyph.m_metrics.horizontalBearing.y) * scale;
 
-		SubmitGlyph(bitmapPos, glyph);
-		glyphPosition.x += int(float(glyph.m_metrics.horiAdvance) + 0.5f);
+		SubmitGlyph((bitmapPos + 127) / 256, glyph, scale);
+		glyphPosition.x += (glyph.m_metrics.horiAdvance.v * scale + 31) / 64;
 		textMaxWidth = std::max(glyphPosition.x, textMaxWidth);
 	}
 
 	textMaxWidth -= position.x;
 	highestPoint -= position.y;
 	lowestPoint -= position.y;
+
+	textMaxWidth = (textMaxWidth + 127) / 256;
+	highestPoint = (highestPoint + 127) / 256;
+	lowestPoint = (lowestPoint + 127) / 256;
 
 	if ((alignment & Align::Right) != 0)
 	{
@@ -127,7 +133,7 @@ void TextRenderer::SumbitGlyphString(const GlyphString& glyphString, const ivec2
 	}
 }
 
-void TextRenderer::SubmitGlyph(const ivec2& position, const Glyph& glyph)
+void TextRenderer::SubmitGlyph(const ivec2& position, const Glyph& glyph, uint16_t scale)
 {
 	//glyph.m_metrics.glyphSize, glyph.m_cacheUV, glyph.m_cacheUV + glyph.m_metrics.glyphSize, ge.r, ge.g, ge.b, ge.a;
 
@@ -136,7 +142,7 @@ void TextRenderer::SubmitGlyph(const ivec2& position, const Glyph& glyph)
 	Vertex v0(vdefault), v1(vdefault), v2(vdefault), v3(vdefault);
 
 	v0.pos = i16vec2(position);
-	v3.pos = i16vec2(position) + i16vec2(glyph.m_metrics.glyphSize);
+	v3.pos = i16vec2(position) + i16vec2((glyph.m_metrics.glyphSize * scale) / (unsigned short)256U);
 	v1.pos.y = v0.pos.y;
 	v2.pos.x = v0.pos.x;
 	v1.pos.x = v3.pos.x;

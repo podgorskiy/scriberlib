@@ -76,7 +76,7 @@ namespace Scriber
 
 		void SetDPI(uint16_t x, uint16_t y);
 
-		void DrawLabel(const char* text, int position_x, int position_y, const Font& font, Align::Enum alignment = Align::Left);
+		void DrawLabel(const char* text, int position_x, int position_y, const Font& font, Align::Enum alignment = Align::Left, float true_hight= 0.f);
 
 		void CleanStash();
 

@@ -15,11 +15,11 @@ namespace Scriber
 		TextRenderer(IRenderAPIPtr renderAPI);
 		~TextRenderer();
 
-		void SumbitGlyphString(const GlyphString& glyphString, const ivec2& position, u16vec2 dpi, const Font& font, Align::Enum alignment);
+		void SumbitGlyphString(const GlyphString& glyphString, const ivec2& position, u16vec2 dpi, const Font& font, Align::Enum alignment, float true_hight);
 
 		void CommitStashed();
 	private:
-		void SubmitGlyph(const ivec2& position, const Glyph& glyph);
+		void SubmitGlyph(const ivec2& position, const Glyph& glyph, uint16_t scale);
 		
 		void GrowBuffers(uint32_t size);
 
