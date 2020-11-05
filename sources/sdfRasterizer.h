@@ -1,4 +1,4 @@
-#include <limits>
+#pragma once
 #include <cmath>
 #include <assert.h>
 #include <freetype.h>
@@ -10,7 +10,7 @@ namespace Scriber
 {
 	namespace detail
 	{
-		float sdLine(vec2 pos, vec2 A, vec2 B)
+		inline float sdLine(vec2 pos, vec2 A, vec2 B)
 		{
 			if (A == B)
 				return 1e6;
@@ -31,7 +31,7 @@ namespace Scriber
 		}
 
 		// signed distance to a quadratic bezier
-		float sdBezier(vec2 pos, vec2 A, vec2 B, vec2 C)
+		inline float sdBezier(vec2 pos, vec2 A, vec2 B, vec2 C)
 		{
 			if (A == B)
 				return sdLine(pos, B, C);
@@ -105,7 +105,7 @@ namespace Scriber
 			return std::sqrt(res) * sign(sc <= 0.f ? 1.0f : -sgn) * ts;
 		}
 
-		float intersection(float d1, float d2)
+		inline float intersection(float d1, float d2)
 		{
 			float dmin = min(abs(d1), abs(d2));
 			return dmin * sign(d1) * sign(d2);
@@ -124,7 +124,7 @@ namespace Scriber
 		};
 	}
 
-    FT_BitmapGlyph RenderSDF(int margin, float cutoff, FT_Face ft_face)
+    inline FT_BitmapGlyph RenderSDF(int margin, float cutoff, FT_Face ft_face)
     {
 		FT_BitmapGlyphRec_* bitmap = (FT_BitmapGlyphRec_*)malloc(sizeof(FT_BitmapGlyphRec_));
 		memset(bitmap, 0, sizeof(FT_BitmapGlyphRec_));
@@ -273,4 +273,4 @@ namespace Scriber
         return bitmap;
     }
 
-} // ns sdf_glyph_foundry
+}

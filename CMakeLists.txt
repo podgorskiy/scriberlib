@@ -40,6 +40,8 @@ if (MSVC)
 	target_compile_options(scribe PRIVATE /wd4267 /wd4244 /wd4800 )
 endif()
 
+target_compile_definitions(scribe PRIVATE FONT_SDF)
+
 find_package(OpenGL)
 if (OPENGL_FOUND)
 	message("OpenGL Correctly Found")
