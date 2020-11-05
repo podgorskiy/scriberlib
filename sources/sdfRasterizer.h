@@ -1,6 +1,7 @@
 #include <limits>
 #include <cmath>
 #include <assert.h>
+#include <freetype.h>
 
 #include "Utils.h"
 
@@ -109,12 +110,31 @@ namespace Scriber
 			float dmin = min(abs(d1), abs(d2));
 			return dmin * sign(d1) * sign(d2);
 		}
+
+		struct FT_Glyph_Class_
+		{
+			FT_Long glyph_size;
+			FT_Glyph_Format glyph_format;
+			FT_Error (*glyph_init)(FT_Glyph glyph, FT_GlyphSlot slot);
+			void (*glyph_done)(FT_Glyph glyph);
+			FT_Error (*glyph_copy)(FT_Glyph source, FT_Glyph target);
+			void (*glyph_transform)(FT_Glyph glyph, const FT_Matrix*  matrix, const FT_Vector*  delta);
+			void (*glyph_bbox)(FT_Glyph glyph, FT_BBox* abbox);
+			FT_Error (*glyph_prepare)(FT_Glyph glyph, FT_GlyphSlot slot);
+		};
 	}
 
     FT_BitmapGlyph RenderSDF(int margin, float cutoff, FT_Face ft_face)
     {
 		FT_BitmapGlyphRec_* bitmap = (FT_BitmapGlyphRec_*)malloc(sizeof(FT_BitmapGlyphRec_));
 		memset(bitmap, 0, sizeof(FT_BitmapGlyphRec_));
+    	bitmap->root.format = FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP;
+    	bitmap->root.library = ft_face->glyph->library;
+    	static detail::FT_Glyph_Class_ custom_class = {sizeof(FT_BitmapGlyphRec_), FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP,
+	                                                   nullptr,
+	                                                   +[](FT_Glyph glyph){ free(((FT_BitmapGlyphRec_*)(glyph))->bitmap.buffer); },
+	                                                   nullptr,nullptr,nullptr,nullptr};
+    	bitmap->root.clazz = (FT_Glyph_Class_*)&custom_class;
 
         if (ft_face->glyph->format != FT_GLYPH_FORMAT_OUTLINE)
         {

@@ -4,6 +4,10 @@
 
 #include <freetype.h>
 
+#ifdef FONT_SDF
+#include "sdfRasterizer.h"
+#endif
+
 #define XXH_INLINE_ALL
 #include <xxhash.h>
 
@@ -23,6 +27,7 @@ GlyphBitmapStash::GlyphBitmapStash(FT_Library lib, FaceCollection* fc, IRenderAP
 	, m_currentPos(m_spacing)
 	, m_renderAPI(std::move(renderAPI))
 	, m_stroker(nullptr)
+	, m_lib(lib)
 	, m_glyph({{F26p6(0), F26p6(0), F26p6(0), i16vec2(0), u16vec2(0)} ,0, u16vec2(0), 0})
 	, m_was_overflowed(false)
 {
@@ -49,20 +54,25 @@ GlyphBitmapStash::~GlyphBitmapStash()
 }
 
 
-inline FT_BitmapGlyph ConvertToStrokedBitmapGlyph(FT_Glyph glyph, FT_Stroker stroker, uint16_t stroke)
+inline FT_BitmapGlyph ConvertToStrokedBitmapGlyph(FT_Glyph glyph, FT_Stroker stroker, uint16_t stroke, FT_Face face)
 {
 	FT_Stroker_Set(stroker, F26p6(stroke).v, FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
 	FT_Glyph_StrokeBorder(&glyph, stroker, 0, 0);
-	FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 1);
-	FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph)glyph;
-	return bitmapGlyph;
+
+	return RenderSDF(5, 0.5, face);
+
+//	FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 1);
+//	FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph)glyph;
+//	return bitmapGlyph;
 }
 
-inline FT_BitmapGlyph ConvertToBitmapGlyph(FT_Glyph glyph)
+inline FT_BitmapGlyph ConvertToBitmapGlyph(FT_Glyph glyph, FT_Face face)
 {
-	FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 0);
-	FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph)glyph;
-	return bitmapGlyph;
+	return RenderSDF(5, 0.5, face);
+
+//	FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 0);
+//	FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph)glyph;
+//	return bitmapGlyph;
 }
 
 Glyph& GlyphBitmapStash::RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyphIndex, FaceID faceId, const Font& font, u16vec2 dpi)
@@ -122,16 +132,16 @@ Glyph& GlyphBitmapStash::RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyph
 					m_glyph.m_metrics.horiAdvance.v += delta.x;
 				}
 
-				FT_BitmapGlyph ftbitmapGlyph = ConvertToBitmapGlyph(ftglyph);
+				FT_BitmapGlyph ftbitmapGlyph = ConvertToBitmapGlyph(ftglyph, face);
 
-				if(font.stroke > 0)
+				if(false)//font.stroke > 0)
 				{
-					FT_BitmapGlyph ftoutlinebitmapGlyph = ConvertToStrokedBitmapGlyph(ftglyph, m_stroker, font.stroke);
+					FT_BitmapGlyph ftoutlinebitmapGlyph = ConvertToStrokedBitmapGlyph(ftglyph, m_stroker, font.stroke, face);
 
 					Stash(m_glyph, ftbitmapGlyph, ftoutlinebitmapGlyph, font.userdata);
 
-					FT_Done_Glyph((FT_Glyph)ftoutlinebitmapGlyph);
-					FT_Done_Glyph((FT_Glyph)ftbitmapGlyph);
+					//FT_Done_Glyph((FT_Glyph)ftoutlinebitmapGlyph);
+					// FT_Done_Glyph((FT_Glyph)ftbitmapGlyph);
 					FT_Done_Glyph((FT_Glyph)ftglyph);
 				}
 				else

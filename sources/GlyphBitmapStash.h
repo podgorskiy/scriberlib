@@ -23,7 +23,7 @@ namespace Scriber
 
 		Glyph& RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyphIndex, FaceID faceId, const Font& font, u16vec2 dpi);
 
-		bool CheckIfOverflowedAndResetFlag() { return m_was_overflowed; m_was_overflowed= false; }
+		bool CheckIfOverflowedAndResetFlag() { bool tmp = m_was_overflowed;  m_was_overflowed = false; return tmp;}
 	private:
 		typedef uint32_t GlyphHash;
 		typedef std::map<GlyphHash, Glyph> GlyphMap;
@@ -43,6 +43,7 @@ namespace Scriber
 		u16vec2 m_currentPos;
 		IRenderAPIPtr m_renderAPI;
 		FT_Stroker m_stroker;
+		FT_Library m_lib;
 		Glyph m_glyph;
 
 		bool m_was_overflowed;
