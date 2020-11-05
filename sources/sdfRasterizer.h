@@ -12,8 +12,6 @@ namespace Scriber
 	{
 		inline float sdLine(vec2 pos, vec2 A, vec2 B)
 		{
-			if (A == B)
-				return 1e6;
 			//printf("dd = intersection(dd, sdLine(p, vec2(%f, %f), vec2(%f, %f)));\n", A.x, A.y, B.x, B.y);
 			vec2 pa = pos - A, ba = B - A;
 			float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0f, 1.0f);
@@ -33,10 +31,6 @@ namespace Scriber
 		// signed distance to a quadratic bezier
 		inline float sdBezier(vec2 pos, vec2 A, vec2 B, vec2 C)
 		{
-			if (A == B)
-				return sdLine(pos, B, C);
-			if (B == C)
-				return sdLine(pos, A, B);
 			//printf("dd = intersection(dd, sdBezier(p, vec2(%f, %f), vec2(%f, %f), vec2(%f, %f)));\n", A.x, A.y, B.x, B.y, C.x, C.y);
 			if (cross2(C - A, B - A) < 0.0f)
 			{
@@ -178,6 +172,27 @@ namespace Scriber
         detail::Command commands[4096 * 4];
         int point_it = 0;
         int cmd_it = 0;
+        auto push_line = [&points, &point_it, &commands, &cmd_it](vec2 b)
+        {
+        	if (points[point_it - 1] != b)
+	        {
+		        points[point_it++] = b;
+		        commands[cmd_it++] = detail::LineTo;
+	        }
+        };
+        auto push_conic = [&points, &point_it, &commands, &cmd_it, &push_line](vec2 b, vec2 c)
+        {
+        	if (points[point_it - 1] == b || b == c)
+	        {
+        		push_line(c);
+	        }
+        	else
+	        {
+	            points[point_it++] = b;
+		        points[point_it++] = c;
+		        commands[cmd_it++] = detail::ConicTo;
+	        }
+        };
 
 	    int first = 0;
 	    for (int n = 0; n < outline.n_contours; ++n)
@@ -220,8 +235,7 @@ namespace Scriber
 			    switch (tag)
 			    {
 				    case FT_CURVE_TAG_ON:
-					    points[point_it++] = p;
-					    commands[cmd_it++] = detail::LineTo;
+				    	push_line(p);
 					    continue;
 				    case FT_CURVE_TAG_CONIC:
 					    v_control = p;
@@ -234,9 +248,7 @@ namespace Scriber
 						    vec2 p = vec2(point->x, point->y) / 64.0f;
 						    if (tag == FT_CURVE_TAG_ON)
 						    {
-							    points[point_it++] = v_control;
-							    points[point_it++] = p;
-							    commands[cmd_it++] = detail::ConicTo;
+								push_conic(v_control, p);
 							    continue;
 						    }
 						    if (tag != FT_CURVE_TAG_CONIC)
@@ -244,15 +256,11 @@ namespace Scriber
 							    return bitmap;
 						    }
 						    vec2 v_middle = (v_control + p) / 2.0f;
-						    points[point_it++] = v_control;
-						    points[point_it++] = v_middle;
-						    commands[cmd_it++] = detail::ConicTo;
+							push_conic(v_control, v_middle);
 						    v_control = p;
 						    goto Do_Conic;
 					    }
-					    points[point_it++] = v_control;
-					    points[point_it++] = v_start;
-					    commands[cmd_it++] = detail::ConicTo;
+						push_conic(v_control, v_start);
 					    goto Close;
 				    default:
 					    return bitmap;
@@ -261,8 +269,7 @@ namespace Scriber
 		    }
 		    if (points[point_it] != v_start)
 		    {
-			    points[point_it++] = v_start;
-			    commands[cmd_it++] = detail::LineTo;
+				push_line(v_start);
 		    }
 		    Close:
 		    first = last + 1;
