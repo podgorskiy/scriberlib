@@ -122,6 +122,14 @@ namespace Scriber
 			void (*glyph_bbox)(FT_Glyph glyph, FT_BBox* abbox);
 			FT_Error (*glyph_prepare)(FT_Glyph glyph, FT_GlyphSlot slot);
 		};
+
+		enum Command: uint8_t
+		{
+			MoveTo,
+			LineTo,
+			ConicTo,
+			End
+		};
 	}
 
     inline FT_BitmapGlyph RenderSDF(int margin, float cutoff, FT_Face ft_face)
@@ -165,10 +173,107 @@ namespace Scriber
         bitmap->bitmap.width = buffered_width;
         bitmap->bitmap.rows = buffered_height;
 
-	    int radius = 8;
-	    int radius_by_256 = (256 / radius);
+        vec2 points[4096 * 4];
+        assert(outline.n_points < 4096 * 4);
+        detail::Command commands[4096 * 4];
+        int point_it = 0;
+        int cmd_it = 0;
 
-        // Loop over every pixel and determine the positive/negative distance to the outline.
+	    int first = 0;
+	    for (int n = 0; n < outline.n_contours; ++n)
+	    {
+		    using namespace detail;
+
+		    int last = outline.contours[n];
+		    FT_Vector* limit = outline.points + last;
+		    vec2 v_start = vec2(outline.points[first].x, outline.points[first].y) / 64.0f;
+		    vec2 v_last = vec2(outline.points[last].x, outline.points[last].y) / 64.0f;
+		    vec2 v_control;
+		    FT_Vector* point = outline.points + first;
+		    char* tags = outline.tags + first;
+		    char tag = FT_CURVE_TAG(tags[0]);
+		    if (tag == FT_CURVE_TAG_CUBIC)
+		    {
+			    return bitmap;
+		    }
+		    if (tag == FT_CURVE_TAG_CONIC)
+		    {
+			    v_start = v_last;
+			    limit--;
+		    }
+		    else
+		    {
+			    v_start = (v_start + v_last) / 2.0f;
+		    }
+		    --point;
+		    --tags;
+
+		    points[point_it++] = v_start;
+		    commands[cmd_it++] = detail::MoveTo;
+
+		    while (point < limit)
+		    {
+			    ++point;
+			    ++tags;
+			    tag = FT_CURVE_TAG(tags[0]);
+			    vec2 p = vec2(point->x, point->y) / 64.0f;
+			    switch (tag)
+			    {
+				    case FT_CURVE_TAG_ON:
+					    points[point_it++] = p;
+					    commands[cmd_it++] = detail::LineTo;
+					    continue;
+				    case FT_CURVE_TAG_CONIC:
+					    v_control = p;
+				    Do_Conic:
+					    if (point < limit)
+					    {
+						    ++point;
+						    ++tags;
+						    tag = FT_CURVE_TAG(tags[0]);
+						    vec2 p = vec2(point->x, point->y) / 64.0f;
+						    if (tag == FT_CURVE_TAG_ON)
+						    {
+							    points[point_it++] = v_control;
+							    points[point_it++] = p;
+							    commands[cmd_it++] = detail::ConicTo;
+							    continue;
+						    }
+						    if (tag != FT_CURVE_TAG_CONIC)
+						    {
+							    return bitmap;
+						    }
+						    vec2 v_middle = (v_control + p) / 2.0f;
+						    points[point_it++] = v_control;
+						    points[point_it++] = v_middle;
+						    commands[cmd_it++] = detail::ConicTo;
+						    v_control = p;
+						    goto Do_Conic;
+					    }
+					    points[point_it++] = v_control;
+					    points[point_it++] = v_start;
+					    commands[cmd_it++] = detail::ConicTo;
+					    goto Close;
+				    default:
+					    return bitmap;
+
+			    }
+		    }
+		    if (points[point_it] != v_start)
+		    {
+			    points[point_it++] = v_start;
+			    commands[cmd_it++] = detail::LineTo;
+		    }
+		    Close:
+		    first = last + 1;
+	    }
+		commands[cmd_it] = detail::End;
+        assert(cmd_it < 4096 * 4);
+        assert(point_it < 4096 * 4);
+
+	    int radius = 8;
+	    float radius_by_256 = (256.0f / radius);
+
         for (unsigned int y = 0; y < buffered_height; y++)
         {
             for (unsigned int x = 0; x < buffered_width; x++)
@@ -179,98 +284,33 @@ namespace Scriber
 
                 float d = 1e6f;
 
-				int first = 0;
-				for (int n = 0; n < outline.n_contours; ++n)
-				{
-					using namespace detail;
+                const vec2* p = points;
+                --p;
 
-					int last  = outline.contours[n];
-					FT_Vector* limit = outline.points + last;
-	                vec2 v_start = vec2(outline.points[first].x, outline.points[first].y) / 64.0f;
-	                vec2 v_last = vec2(outline.points[last].x, outline.points[last].y) / 64.0f;
-	                vec2 v_control;
-					FT_Vector* point = outline.points + first;
-					char* tags = outline.tags + first;
-					char tag = FT_CURVE_TAG(tags[0]);
-					if (tag == FT_CURVE_TAG_CUBIC)
-						return bitmap;
-					if ( tag == FT_CURVE_TAG_CONIC )
+                for (auto* cmd = commands; *cmd != detail::End; ++cmd)
+                {
+					switch(*cmd)
 					{
-						v_start = v_last;
-						limit--;
+						case detail::MoveTo:
+							++p;
+							break;
+						case detail::LineTo:
+							d = detail::intersection(d, detail::sdLine(pt, p[0], p[1]));
+							++p;
+							break;
+						case detail::ConicTo:
+							d = detail::intersection(d, detail::sdBezier(pt, p[0], p[1], p[2]));
+							p += 2;
+							break;
+						case detail::End: break;
 					}
-					else
-					{
-						v_start = (v_start + v_last) / 2.0f;
-					}
-					--point;
-					--tags;
+                }
 
-					vec2 prev = v_start;
-
-					while (point < limit)
-					{
-						++point;
-						++tags;
-						tag = FT_CURVE_TAG(tags[0]);
-						vec2 p = vec2(point->x, point->y) / 64.0f;
-						switch ( tag )
-						{
-							case FT_CURVE_TAG_ON:
-								d = intersection(d, sdLine(pt, prev, p));
-								prev = p;
-								continue;
-							case FT_CURVE_TAG_CONIC:
-								v_control = p;
-								Do_Conic:
-		                        if (point < limit)
-		                        {
-									++point;
-									++tags;
-									tag = FT_CURVE_TAG(tags[0]);
-									vec2 p = vec2(point->x, point->y) / 64.0f;
-									if ( tag == FT_CURVE_TAG_ON )
-									{
-										d = intersection(d, sdBezier(pt, prev, v_control, p));
-										prev = p;
-										continue;
-									}
-									if (tag != FT_CURVE_TAG_CONIC)
-										return bitmap;
-									vec2 v_middle = (v_control + p) / 2.0f;
-									d = intersection(d, sdBezier(pt, prev, v_control, v_middle));
-									prev = v_middle;
-									v_control = p;
-									goto Do_Conic;
-		                        }
-								d = intersection(d, sdBezier(pt, prev, v_control, v_start));
-								prev = v_start;
-								goto Close;
-							default:
-								return bitmap;
-
-						}
-					}
-					if (prev != v_start)
-					{
-						d = intersection(d, sdLine(pt, prev, v_start));
-						prev = v_start;
-					}
-                    Close:
-						first = last + 1;
-				}
-				//return bitmap;
-                d *= radius_by_256;
-                d += cutoff * 256;
-
-                // Clamp to 0-255 to prevent overflows or underflows.
-                int n = d > 255 ? 255 : d;
-                n = n < 0 ? 0 : n;
-
-                bitmap->bitmap.buffer[i] = static_cast<unsigned char>(255 - n);
+                d = d * radius_by_256 + cutoff * 256.0f;
+                int n = clamp((int)d, 0, 255);
+                bitmap->bitmap.buffer[i] = 255 - n;
             }
         }
         return bitmap;
     }
-
 }
