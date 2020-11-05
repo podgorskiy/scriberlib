@@ -5,6 +5,34 @@
 
 #include "Utils.h"
 
+#if !defined(SCRIBER_SDF_USE_OMP)
+#if defined(_OPENMP)
+#define SCRIBER_SDF_USE_OMP 1
+#else
+#define SCRIBER_SDF_USE_OMP 0
+#endif
+#endif
+
+#if SCRIBER_SDF_USE_OMP
+#include <omp.h>
+#endif
+
+#ifdef _MSC_VER
+#define T4_Pragma(X) __pragma(X)
+#else
+#define T4_Pragma(X) _Pragma(#X)
+#endif
+
+#if SCRIBER_SDF_USE_OMP
+#define OMP_THREAD_ID omp_get_thread_num()
+#define OMP_MAX_THREADS omp_get_max_threads()
+#define parallel_for T4_Pragma(omp parallel for) for
+#else
+#define OMP_THREAD_ID 0
+#define OMP_MAX_THREADS 1
+#define parallel_for for
+#endif
+
 
 namespace Scriber
 {
@@ -281,43 +309,43 @@ namespace Scriber
 	    int radius = 8;
 	    float radius_by_256 = (256.0f / radius);
 
-        for (unsigned int y = 0; y < buffered_height; y++)
-        {
-            for (unsigned int x = 0; x < buffered_width; x++)
-            {
-                unsigned int ypos = buffered_height - y - 1;
-                unsigned int i = ypos * buffered_width + x;
-                vec2 pt = vec2(x, y) + vec2(bbox_xmin, bbox_ymin) + vec2(0.513f, 0.507f);
+	    unsigned char* __restrict bmp = bitmap->bitmap.buffer;
+	    parallel_for(unsigned int i = 0; i < buffered_height * buffered_width; ++i)
+	    {
+		    unsigned int x = i % buffered_width;
+		    unsigned int ypos = (i - x) / buffered_width;
+		    unsigned int y = buffered_height - 1 - ypos;
+		    vec2 pt = vec2(x, y) + vec2(bbox_xmin, bbox_ymin) + vec2(0.513f, 0.507f);
 
-                float d = 1e6f;
+		    float d = 1e6f;
 
-                const vec2* p = points;
-                --p;
+		    const vec2* __restrict p = points;
+		    --p;
 
-                for (auto* cmd = commands; *cmd != detail::End; ++cmd)
-                {
-					switch(*cmd)
-					{
-						case detail::MoveTo:
-							++p;
-							break;
-						case detail::LineTo:
-							d = detail::intersection(d, detail::sdLine(pt, p[0], p[1]));
-							++p;
-							break;
-						case detail::ConicTo:
-							d = detail::intersection(d, detail::sdBezier(pt, p[0], p[1], p[2]));
-							p += 2;
-							break;
-						case detail::End: break;
-					}
-                }
+		    for (auto* __restrict cmd = commands; *cmd != detail::End; ++cmd)
+		    {
+			    switch (*cmd)
+			    {
+				    case detail::MoveTo:
+					    ++p;
+					    break;
+				    case detail::LineTo:
+					    d = detail::intersection(d, detail::sdLine(pt, p[0], p[1]));
+					    ++p;
+					    break;
+				    case detail::ConicTo:
+					    d = detail::intersection(d, detail::sdBezier(pt, p[0], p[1], p[2]));
+					    p += 2;
+					    break;
+				    case detail::End:
+					    break;
+			    }
+		    }
 
-                d = d * radius_by_256 + cutoff * 256.0f;
-                int n = clamp((int)d, 0, 255);
-                bitmap->bitmap.buffer[i] = 255 - n;
-            }
-        }
+		    d = d * radius_by_256 + cutoff * 256.0f;
+		    int n = clamp((int) d, 0, 255);
+		    bmp[i] = 255 - n;
+	    }
         return bitmap;
     }
 }
