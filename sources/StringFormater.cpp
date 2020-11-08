@@ -16,7 +16,7 @@ void StringFormater::Format(utf32string& string, const Font& font, u16vec2 dpi, 
 
 	for (auto it = layout.begin(); it != layout.end(); ++it)
 	{
-		Glyph glyph = m_glyphStash->RetrieveGlyph(it->glyph, lastGlyph, it->id, font, dpi);
+		Glyph glyph = m_glyphStash->RetrieveGlyph(it->glyph, lastGlyph, it->id, font, dpi, true);
 		
 		glyph.m_code = it->code;
 		glyph.m_color = font.color;

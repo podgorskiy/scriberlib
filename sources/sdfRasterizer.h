@@ -4,6 +4,7 @@
 #include <freetype.h>
 
 #include "Utils.h"
+#include "simd.h"
 
 #if !defined(SCRIBER_SDF_USE_OMP)
 #if defined(_OPENMP)
@@ -54,6 +55,61 @@ namespace Scriber
 
 			float ts = 1.0f - float(!(has_neg && has_pos)) * 2.0f;
 			return d * ts;
+		}
+
+#define CROSS2(X1, X2) VSUB(VMUL(X1##x, X2##y), VMUL(X1##y, X2##x))
+#define DOT(X1, X2) VADD(VMUL(X1##x, X2##x), VMUL(X1##y, X2##y))
+
+		inline simd::f4 sdLineSIMD(float* _pos, vec2 _A, vec2 _B)
+		{
+			vec2 ba = _B - _A;
+			float _dba = dot(ba, ba);
+			simd::f4 posx = VLD(_pos);
+			simd::f4 posy = VLD(_pos + 4);
+			simd::f4 Ax = VSET(_A.x);
+			simd::f4 Ay = VSET(_A.y);
+			simd::f4 Bx = VSET(_B.x);
+			simd::f4 By = VSET(_B.y);
+			simd::f4 pax = VSUB(posx, Ax);
+			simd::f4 pay = VSUB(posy, Ay);
+			simd::f4 bax = VSET(ba.x);
+			simd::f4 bay = VSET(ba.y);
+			simd::f4 dba = VSET(_dba);
+			simd::f4 h = VMAX(VMIN(VDIV(DOT(pa, ba), dba), VSET(1.0)) , VSET(0.0));
+			simd::f4 vdx = VSUB(pax, VMUL(bax, h));
+			simd::f4 vdy = VSUB(pay, VMUL(bay, h));
+			simd::f4 d = SQRT(VADD(VMUL(vdx, vdx), VMUL(vdy, vdy)));
+			simd::f4 posmBx = VSUB(posx, Bx);
+			simd::f4 posmBy = VSUB(posy, By);
+
+			simd::f4 sa = CROSS2(A, pos);
+			simd::f4 sc = CROSS2(ba, pa);
+			simd::f4 s0 = CROSS2(-B, posmB);
+
+			float sa4[4];
+			float sc4[4];
+			float s04[4];
+			VSTORE(sa4,sa);
+			VSTORE(sc4,sc);
+			VSTORE(s04,s0);
+
+			bool has_neg0 = (sa[0] < 0.f) || (sc[0] < 0.f) || (s0[0] < 0.f);
+			bool has_pos0 = (sa[0] > 0.f) || (sc[0] > 0.f) || (s0[0] > 0.f);
+			bool has_neg1 = (sa[1] < 0.f) || (sc[1] < 0.f) || (s0[1] < 0.f);
+			bool has_pos1 = (sa[1] > 0.f) || (sc[1] > 0.f) || (s0[1] > 0.f);
+			bool has_neg2 = (sa[2] < 0.f) || (sc[2] < 0.f) || (s0[2] < 0.f);
+			bool has_pos2 = (sa[2] > 0.f) || (sc[2] > 0.f) || (s0[2] > 0.f);
+			bool has_neg3 = (sa[3] < 0.f) || (sc[3] < 0.f) || (s0[3] < 0.f);
+			bool has_pos3 = (sa[3] > 0.f) || (sc[3] > 0.f) || (s0[3] > 0.f);
+
+			float ts[4] = {
+					1.0f - float(!(has_neg0 && has_pos0)) * 2.0f,
+					1.0f - float(!(has_neg1 && has_pos1)) * 2.0f,
+					1.0f - float(!(has_neg2 && has_pos2)) * 2.0f,
+					1.0f - float(!(has_neg3 && has_pos3)) * 2.0f,
+					};
+
+			return VMUL(d, VLD(ts));
 		}
 
 		// signed distance to a quadratic bezier
@@ -131,6 +187,24 @@ namespace Scriber
 		{
 			float dmin = min(abs(d1), abs(d2));
 			return dmin * sign(d1) * sign(d2);
+		}
+
+		inline void intersection(float* d0, simd::f4 d2)
+		{
+			float d4[4];
+			VSTORE(d4, d2);
+			d0[0] = intersection(d0[0], d4[0]);
+			d0[1] = intersection(d0[1], d4[1]);
+			d0[2] = intersection(d0[2], d4[2]);
+			d0[3] = intersection(d0[3], d4[3]);
+		}
+
+		inline void intersection(float* d0, float d1, float d2, float d3, float d4)
+		{
+			d0[0] = intersection(d0[0], d1);
+			d0[1] = intersection(d0[1], d2);
+			d0[2] = intersection(d0[2], d3);
+			d0[3] = intersection(d0[3], d4);
 		}
 
 		struct FT_Glyph_Class_
@@ -310,14 +384,18 @@ namespace Scriber
 	    float radius_by_256 = (256.0f / radius);
 
 	    unsigned char* __restrict bmp = bitmap->bitmap.buffer;
-	    parallel_for(unsigned int i = 0; i < buffered_height * buffered_width; ++i)
+	    parallel_for(unsigned int i = 0; i < buffered_height * buffered_width; i += 4)
 	    {
-		    unsigned int x = i % buffered_width;
-		    unsigned int ypos = (i - x) / buffered_width;
-		    unsigned int y = buffered_height - 1 - ypos;
-		    vec2 pt = vec2(x, y) + vec2(bbox_xmin, bbox_ymin) + vec2(0.513f, 0.507f);
+		    vec2 pt[4] =
+				    {
+		    		    vec2((i + 0) % buffered_width, buffered_height - 1 - ((i + 0) / buffered_width)) + vec2(bbox_xmin, bbox_ymin) + vec2(0.513f, 0.507f),
+		    		    vec2((i + 1) % buffered_width, buffered_height - 1 - ((i + 1) / buffered_width)) + vec2(bbox_xmin, bbox_ymin) + vec2(0.513f, 0.507f),
+		    		    vec2((i + 2) % buffered_width, buffered_height - 1 - ((i + 2) / buffered_width)) + vec2(bbox_xmin, bbox_ymin) + vec2(0.513f, 0.507f),
+		    		    vec2((i + 3) % buffered_width, buffered_height - 1 - ((i + 3) / buffered_width)) + vec2(bbox_xmin, bbox_ymin) + vec2(0.513f, 0.507f),
+				    };
+		    float pos_simd[8] = {pt[0].x,pt[1].x,pt[2].x,pt[3].x,pt[0].y,pt[1].y,pt[2].y,pt[3].y};
 
-		    float d = 1e6f;
+		    float d[4] = {1e6f, 1e6f, 1e6f, 1e6f};
 
 		    const vec2* __restrict p = points;
 		    --p;
@@ -330,11 +408,12 @@ namespace Scriber
 					    ++p;
 					    break;
 				    case detail::LineTo:
-					    d = detail::intersection(d, detail::sdLine(pt, p[0], p[1]));
+					    // detail::intersection(d, detail::sdLine(pt[0], p[0], p[1]), detail::sdLine(pt[1], p[0], p[1]), detail::sdLine(pt[2], p[0], p[1]), detail::sdLine(pt[3], p[0], p[1]));
+					    detail::intersection(d, detail::sdLineSIMD(pos_simd, p[0], p[1]));
 					    ++p;
 					    break;
 				    case detail::ConicTo:
-					    d = detail::intersection(d, detail::sdBezier(pt, p[0], p[1], p[2]));
+					    detail::intersection(d, detail::sdBezier(pt[0], p[0], p[1], p[2]), detail::sdBezier(pt[1], p[0], p[1], p[2]), detail::sdBezier(pt[2], p[0], p[1], p[2]), detail::sdBezier(pt[3], p[0], p[1], p[2]));
 					    p += 2;
 					    break;
 				    case detail::End:
@@ -342,9 +421,14 @@ namespace Scriber
 			    }
 		    }
 
-		    d = d * radius_by_256 + cutoff * 256.0f;
-		    int n = clamp((int) d, 0, 255);
-		    bmp[i] = 255 - n;
+		    d[0] = d[0] * radius_by_256 + cutoff * 256.0f;
+		    d[1] = d[1] * radius_by_256 + cutoff * 256.0f;
+		    d[2] = d[2] * radius_by_256 + cutoff * 256.0f;
+		    d[3] = d[3] * radius_by_256 + cutoff * 256.0f;
+		    bmp[i + 0] = 255 - clamp((int) d[0], 0, 255);
+		    bmp[i + 1] = 255 - clamp((int) d[1], 0, 255);
+		    bmp[i + 2] = 255 - clamp((int) d[2], 0, 255);
+		    bmp[i + 3] = 255 - clamp((int) d[3], 0, 255);
 	    }
         return bitmap;
     }

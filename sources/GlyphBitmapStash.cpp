@@ -59,23 +59,26 @@ inline FT_BitmapGlyph ConvertToStrokedBitmapGlyph(FT_Glyph glyph, FT_Stroker str
 	FT_Stroker_Set(stroker, F26p6(stroke).v, FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
 	FT_Glyph_StrokeBorder(&glyph, stroker, 0, 0);
 
-	return RenderSDF(5, 0.5, face);
-
-//	FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 1);
-//	FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph)glyph;
-//	return bitmapGlyph;
+	FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 1);
+	FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph)glyph;
+	return bitmapGlyph;
 }
 
-inline FT_BitmapGlyph ConvertToBitmapGlyph(FT_Glyph glyph, FT_Face face)
+inline FT_BitmapGlyph ConvertToBitmapGlyph(FT_Glyph glyph, FT_Face face, bool sdf)
 {
-	return RenderSDF(5, 0.5, face);
-
-//	FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 0);
-//	FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph)glyph;
-//	return bitmapGlyph;
+	if (sdf)
+	{
+		return RenderSDF(5, 0.5, face);
+	}
+	else
+	{
+		FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 0);
+		FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph) glyph;
+		return bitmapGlyph;
+	}
 }
 
-Glyph& GlyphBitmapStash::RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyphIndex, FaceID faceId, const Font& font, u16vec2 dpi)
+Glyph& GlyphBitmapStash::RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyphIndex, FaceID faceId, const Font& font, u16vec2 dpi, bool sdf)
 {
 	struct Data
 	{
@@ -132,16 +135,16 @@ Glyph& GlyphBitmapStash::RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyph
 					m_glyph.m_metrics.horiAdvance.v += delta.x;
 				}
 
-				FT_BitmapGlyph ftbitmapGlyph = ConvertToBitmapGlyph(ftglyph, face);
+				FT_BitmapGlyph ftbitmapGlyph = ConvertToBitmapGlyph(ftglyph, face, sdf);
 
-				if(false)//font.stroke > 0)
+				if(font.stroke > 0 && !sdf)
 				{
 					FT_BitmapGlyph ftoutlinebitmapGlyph = ConvertToStrokedBitmapGlyph(ftglyph, m_stroker, font.stroke, face);
 
 					Stash(m_glyph, ftbitmapGlyph, ftoutlinebitmapGlyph, font.userdata);
 
-					//FT_Done_Glyph((FT_Glyph)ftoutlinebitmapGlyph);
-					// FT_Done_Glyph((FT_Glyph)ftbitmapGlyph);
+					FT_Done_Glyph((FT_Glyph)ftoutlinebitmapGlyph);
+					FT_Done_Glyph((FT_Glyph)ftbitmapGlyph);
 					FT_Done_Glyph((FT_Glyph)ftglyph);
 				}
 				else
@@ -157,7 +160,7 @@ Glyph& GlyphBitmapStash::RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyph
 		{
 			FaceID result = m_fc->GetFaceIDFromCode(0x25A1, font.preferred_tf, font.style);
 			FT_UInt glyphIndex = FT_Get_Char_Index(m_fc->GetFace(result), 0x25A1);
-			m_glyph = RetrieveGlyph(glyphIndex, 0, result, font, dpi);
+			m_glyph = RetrieveGlyph(glyphIndex, 0, result, font, dpi, sdf);
 			m_glyph.m_code = 0;
 			return m_glyph;
 		}

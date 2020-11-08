@@ -50,7 +50,7 @@ namespace Scriber
 		return (uint8_t(style) & uint8_t(FontStyle::BitFieldMask)) | ((uint8_t(align) & uint8_t(Align::BitFieldMask)) << 2u);
 	}
 
-	inline uint8_t Deaggregate(uint8_t a, FontStyle::Enum& style, Align::Enum& align)
+	inline void Deaggregate(uint8_t a, FontStyle::Enum& style, Align::Enum& align)
 	{
 		style = FontStyle::Enum(a & uint8_t(FontStyle::BitFieldMask));
 		align = Align::Enum((a >> 2u) & uint8_t(Align::BitFieldMask));

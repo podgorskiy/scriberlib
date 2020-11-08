@@ -2,6 +2,7 @@
 #include "ForwardDecl.h"
 #include "Attributes.h"
 #include <string>
+#include <cmath>
 
 namespace Scriber
 {
@@ -305,9 +306,15 @@ namespace Scriber
 	}
 
 	template<typename T>
-	inline bool operator==(vec2_t<T>& v1, const vec2_t<T>& v2)
+	inline bool operator==(const vec2_t<T>& v1, const vec2_t<T>& v2)
 	{
 		return v1.x == v2.x && v1.y == v2.y;
+	}
+
+	template<typename T>
+	inline bool operator!=(const vec2_t<T>& v1, const vec2_t<T>& v2)
+	{
+		return v1.x != v2.x || v1.y != v2.y;
 	}
 
 	template<typename T>
@@ -320,6 +327,12 @@ namespace Scriber
 	inline vec2_t<bool> greaterThanEqual(vec2_t<T>& v1, const vec2_t<T>& v2)
 	{
 		return vec2_t<bool>(v1.x >= v2.x, v1.y >= v2.y);
+	}
+
+	template<typename T>
+	inline vec2_t<bool> equal(vec2_t<T>& v1, const vec2_t<T>& v2)
+	{
+		return vec2_t<bool>(v1.x == v2.x, v1.y == v2.y);
 	}
 
 	template<typename T>
@@ -343,7 +356,49 @@ namespace Scriber
 	{
 		return v1.x || v1.y;
 	}
-	
+
+	template<typename T>
+	inline T dot2(const vec2_t<T>& v) { return dot(v,v); }
+
+	template<typename T>
+	inline T sign(T v) { return v < T(0) ? T(-1) : (v == T(0) ? T(0) : T(1)); }
+
+	template<typename T>
+	inline T abs(T v) { return v < T(0) ? -v : v; }
+
+	template<typename T>
+	inline T pow(T v, T y) { return std::pow(v, y); }
+
+	template<typename T>
+	inline T clamp(T v, T min, T max) { return v < min ? min : (v > max ? max : v); }
+
+	template<typename T>
+	inline T min(T v1, T v2) { return v1 < v2 ? v1 : v2; }
+
+	template<typename T>
+	inline T max(T v1, T v2) { return v1 < v2 ? v2 : v1; }
+
+	template<typename T>
+	inline vec2_t<T> sign(const vec2_t<T>& v) { return vec2_t<T>(sign(v.x), sign(v.y)); }
+
+	template<typename T>
+	inline vec2_t<T> pow(const vec2_t<T>& v, const vec2_t<T>& y) { return vec2_t<T>(pow(v.x, y.x), pow(v.y, y.y)); }
+
+	template<typename T>
+	inline vec2_t<T> pow(const vec2_t<T>& v, T y) { return vec2_t<T>(pow(v.x, y), pow(v.y, y)); }
+
+	template<typename T>
+	inline vec2_t<T> clamp(const vec2_t<T>& v, T min, T max) { return vec2_t<T>(clamp(v.x, min, max), clamp(v.y, min, max)); }
+
+	template<typename T>
+	inline vec2_t<T> abs(const vec2_t<T>& v) { return vec2_t<T>(abs(v.x), abs(v.y)); }
+
+	template<typename T>
+	inline float cross2(const vec2_t<T>& a, const vec2_t<T>& b) { return a.x*b.y - a.y*b.x; }
+
+	template<typename T>
+	inline float length(const vec2_t<T>& v) { return sqrt(v.x * v.x + v.y * v.y); }
+
 	typedef vec2_t<int> ivec2;
 	typedef vec2_t<float> vec2;
 

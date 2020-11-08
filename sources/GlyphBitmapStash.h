@@ -21,7 +21,7 @@ namespace Scriber
 
 		void Purge();
 
-		Glyph& RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyphIndex, FaceID faceId, const Font& font, u16vec2 dpi);
+		Glyph& RetrieveGlyph(GlyphID glyphIndex, GlyphID previousGlyphIndex, FaceID faceId, const Font& font, u16vec2 dpi, bool sdf);
 
 		bool CheckIfOverflowedAndResetFlag() { bool tmp = m_was_overflowed;  m_was_overflowed = false; return tmp;}
 	private:
